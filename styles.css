@@ -1,0 +1,349 @@
+/* ==========================================================================
+   1. 基本設定 & リセット
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #0f172a; /* 濃い紺色ベース */
+  color: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: hidden;
+}
+
+/* アプリ全体のコンテナ */
+.app {
+  width: 100%;
+  max-width: 500px; /* スマホ・タブレットに最適な幅に制限 */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 12px;
+}
+
+/* ヘッダー */
+.header {
+  text-align: center;
+  padding: 4px 0;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  color: #4ade80; /* 黄緑のアクセント */
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   2. メインゲームエリア & スコアボード
+   ========================================================================== */
+.game-area {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.game-area--hidden {
+  display: none !important;
+}
+
+/* スコアボード全体 */
+.scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #1e293b;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* プレイヤーカード（黒・白共通） */
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* 現在の手番プレイヤーのハイライト */
+.player-card.active {
+  background-color: rgba(74, 222, 128, 0.1);
+  border-color: #4ade80;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+/* 「あなた」等のラベルがある時の調整 */
+.player-card.is-you .player-label {
+  color: #38bdf8;
+}
+
+.player-count {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+/* 中央の手番インジケーター */
+.turn-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+#turn-text {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #e2e8f0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   3. リバーシ盤面（スマホの横幅に完全自動追従）
+   ========================================================================== */
+.board-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* 縦横比を1:1に固定して綺麗な正方形を保つ */
+  background-color: #064e3b; /* 盤面の外枠 */
+  padding: 6px;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 3px; /* マス同士の隙間（線になる） */
+  width: 100%;
+  height: 100%;
+  background-color: #047857; /* グリッド線の色 */
+}
+
+/* 各マス（ボタン） */
+.cell {
+  background-color: #10b981; /* オセロ盤の緑 */
+  border: none;
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s;
+  -webkit-tap-highlight-color: transparent; /* スマホタップ時の余計なハイライトを消す */
+}
+
+.cell:active {
+  background-color: #059669;
+}
+
+/* 置ける場所のドット提示 */
+.cell.valid::before {
+  content: "";
+  width: 24%;
+  height: 24%;
+  background-color: rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ヒントモードがONの時 */
+.cell.show-hint::before {
+  background-color: #facc15; /* 黄色のドットに変形 */
+  box-shadow: 0 0 6px #facc15;
+}
+
+.cell.valid--disabled::before {
+  display: none !important; /* CPU手番中はドットを隠す */
+}
+
+/* ==========================================================================
+   4. 石（ディスク）の見た目とアニメーション
+   ========================================================================== */
+.disc {
+  display: inline-block;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* スコアボード等の小サイズ */
+.disc--black { background: radial-gradient(circle at 30% 30%, #454545, #111111); width: 16px; height: 16px; }
+.disc--white { background: radial-gradient(circle at 30% 30%, #ffffff, #dcdcdc); width: 16px; height: 16px; border: 1px solid #b5b5b5; }
+.turn-disc { width: 20px; height: 20px; }
+
+/* 盤面上の大きな石の基本スタイル */
+.piece {
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  box-shadow: inset -2px -2px 6px rgba(0,0,0,0.4), 2px 4px 6px rgba(0,0,0,0.3);
+  display: block;
+}
+
+.piece.black {
+  background: radial-gradient(circle at 30% 30%, #444, #000 80%);
+}
+
+.piece.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #dfdfdf 80%);
+  border: 1px solid #ccc;
+}
+
+/* ひっくり返るアニメーション（キーフレームアニメーションで確実に実行） */
+.piece.flip {
+  animation: flipAnimation 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* 石が一度細くなってから元のサイズに戻るリアルな演出 */
+@keyframes flipAnimation {
+  0% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0); /* 真横を向いた瞬間 */
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* ==========================================================================
+   5. メッセージ ＆ 操作ボタン
+   ========================================================================== */
+.message {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #f8fafc;
+  min-height: 1.5em;
+  padding: 0 8px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+/* 汎用ボタン基本スタイル */
+.btn {
+  flex: 1;
+  padding: 12px 8px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn--primary {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+.btn--primary:hover { background-color: #2563eb; }
+
+.btn--secondary {
+  background-color: #475569;
+  color: #ffffff;
+}
+.btn--secondary:hover { background-color: #334155; }
+
+.btn--block {
+  width: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   6. ポップアップ（モーダルダイアログ）設定
+   ========================================================================== */
+.modal {
+  border: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  padding: 0;
+  width: calc(100% - 32px);
+  max-width: 380px;
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px); /* 背景をぼかすエフェクト */
+}
+
+.modal-content {
+  width: 100% !important;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5) !important;
+}
+
+/* 広告枠 */
+.ad-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1e293b;
+  border: 1px dashed #475569;
+  border-radius: 8px;
+  min-height: 50px;
+  padding: 8px;
+}
+.ad-placeholder {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* フッター */
+.footer {
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.75rem;
+  color: #475569;
+  margin-top: auto;
+}
