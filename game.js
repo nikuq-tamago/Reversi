@@ -46,6 +46,7 @@
   let humanColor;
   let cpuColor;
   let cpuThinking;
+  let isTransitioning = false; // ✨ ターン移行中の連打を禁止する絶対ロックフラグ
 
   function createBoard() {
     board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
@@ -396,9 +397,13 @@
   function makeMove(row, col) {
     const key = `${row},${col}`;
     const flips = validMoves.get(key);
-    if (!flips || gameOver) return;
     
-    if (isCpuTurn()) return;
+    // ⚡ 絶対ロック：ゲーム終了、CPU番、またはターン切り替えアニメーション中なら即拒否
+    if (!flips || gameOver || isCpuTurn() || isTransitioning) return;
+
+    // クリックされた瞬間にロックを有効化
+    isTransitioning = true;
+    validMoves = new Map();
 
     board[row][col] = currentPlayer;
     const flippedKeys = new Set();
@@ -442,6 +447,10 @@
         gameOver = false;
         renderBoard(); 
         updateScoreboard();
+        
+        // 次の手番の準備が完了したのでロック解除
+        isTransitioning = false; 
+        
         scheduleCpuTurn();
         return;
       }
@@ -456,18 +465,27 @@
         updateScoreboard();
 
         window.setTimeout(() => {
-          if (gameOver) return;
+          if (gameOver) {
+            isTransitioning = false;
+            return;
+          }
           currentPlayer = opponent(next); 
           validMoves = passMoves;          
           messageEl.textContent = "";     
           renderBoard();
           updateScoreboard();
+          
+          // パスを挟んだ後の手番の準備が完了したのでロック解除
+          isTransitioning = false; 
+          
           scheduleCpuTurn(); 
         }, 1500);
         
         return;
       }
 
+      // ゲーム終了時もロック解除
+      isTransitioning = false; 
       finishGame();
     }, 400); 
   }
@@ -518,12 +536,13 @@
     gameOver = false;
     hintVisible = config.hintInit; 
     cpuThinking = false;
+    isTransitioning = false; // ✨ ゲーム開始時にフラグをリセット
     messageEl.textContent = "";
 
     updatePlayerLabels();
     updateHintButtonText(); 
     gameAreaEl.classList.remove("game-area--hidden");
-    setupModalEl.close(); // ★確実に閉じる安全な処理
+    setupModalEl.close(); 
     renderBoard();
     updateScoreboard();
     scheduleCpuTurn();
@@ -537,24 +556,7 @@
     setupModalEl.showModal();
   }
 
-  function updateSetupLabels() {
-    // 安全にチェック状態を取得する防御コードに変更
-    const checkedMode = setupFormEl.querySelector('input[name="mode"]:checked');
-    const isCpu = checkedMode ? (checkedMode.value === "cpu") : true;
-    
-    const levelControl = document.getElementById("cpu-level-control");
-    if (levelControl) {
-      levelControl.style.display = isCpu ? "block" : "none";
-    }
-
-    colorLegendEl.textContent = isCpu ? "あなたの色" : "操作する側（先手は黒）";
-    colorHintEl.textContent = isCpu
-      ? "もう一方の色はCPUが操作します。黒が先手です。"
-      : "同じ画面で2人が交代します。黒が先手です。";
-  }
-
   function readSetupConfig() {
-    // 選択されていない場合のデフォルト(予備)を用意してフリーズを100%防ぐ
     const modeEl = setupFormEl.querySelector('input[name="mode"]:checked');
     const colorEl = setupFormEl.querySelector('input[name="color"]:checked');
     const levelEl = setupFormEl.querySelector('input[name="level"]:checked');
@@ -594,35 +596,28 @@
     updateHintButtonText();
   }
 
-  // 🛠️ 修正後：「2人対戦」のときは色選択エリアを丸ごと消す！
   function updateSetupLabels() {
     const checkedMode = setupFormEl.querySelector('input[name="mode"]:checked');
     const isCpu = checkedMode ? (checkedMode.value === "cpu") : true;
     
-    // CPUの強さ設定の表示・非表示
     const levelControl = document.getElementById("cpu-level-control");
     if (levelControl) {
       levelControl.style.display = isCpu ? "block" : "none";
     }
 
-    // ★色選択エリアの親玉（囲み枠）をHTMLから自動で見つける
     const colorSection = colorLegendEl.closest('div');
 
     if (isCpu) {
-      // --- CPU戦のとき ---
-      if (colorSection) colorSection.style.display = "block"; // エリアを表示する
+      if (colorSection) colorSection.style.display = "block"; 
 
-      // ラジオボタンのロックを解除
       const colorInputs = setupFormEl.querySelectorAll('input[name="color"]');
       colorInputs.forEach(input => input.disabled = false);
 
       colorLegendEl.textContent = "あなたの色";
       colorHintEl.textContent = "もう一方の色はCPUが操作します。黒が先手です。";
     } else {
-      // --- 2人対戦のとき ---
-      if (colorSection) colorSection.style.display = "none"; // ★エリアを丸ごと非表示にする！
+      if (colorSection) colorSection.style.display = "none"; 
 
-      // 裏側では、ゲームが壊れないように強制的に「黒（先手）」にチェックを入れておく
       const colorInputs = setupFormEl.querySelectorAll('input[name="color"]');
       colorInputs.forEach(input => {
         if (input.value === "black") {
