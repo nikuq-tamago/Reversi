@@ -816,7 +816,7 @@
           roomMatched = true;
           const instructionEl = document.getElementById('online-instruction');
           if (instructionEl) instructionEl.style.display = 'block';
-          if (statusEl) statusEl.textContent = '色を選択してください。';
+          if (statusEl) statusEl.textContent = '合言葉待機中';
           if (modal) modal.showModal();
           enableColorButtons(true);
           onlineChannel.send({
