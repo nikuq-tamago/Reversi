@@ -937,9 +937,17 @@
     }
 
     const assigned = colorChoices[clientId];
-    if (modal) modal.close();
-    startGame({ mode: 'pvp', level: '2', color: assigned, hintInit });
-    messageEl.textContent = '対局開始 — あなたは ' + (assigned === 'black' ? '黒（先手）' : '白（後手）');
+    if (statusEl) statusEl.textContent = 'ゲーム開始ボタンを押してゲームを始めてください。';
+    
+    const btnGameStart = document.getElementById('btn-online-game-start');
+    if (btnGameStart) {
+      btnGameStart.style.display = 'block';
+      btnGameStart.onclick = () => {
+        if (modal) modal.close();
+        startGame({ mode: 'pvp', level: '2', color: assigned, hintInit });
+        messageEl.textContent = '対局開始 — あなたは ' + (assigned === 'black' ? '黒（先手）' : '白（後手）');
+      };
+    }
   }
 
   function handleRemoteMove(payload) {
