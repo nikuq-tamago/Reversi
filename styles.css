@@ -298,16 +298,12 @@ body {
 }
 .btn--secondary:hover { background-color: #334155; }
 
+.btn.btn--secondary.btn-selected,
 .btn-selected {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
-  border: 2px solid #60a5fa;
-  background-color: #2563eb;
-  color: #ffffff;
-}
-
-.btn-selected.btn--secondary {
-  background-color: #2563eb;
-  color: #ffffff;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border: 2px solid #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35) !important;
 }
 
 /* ==========================================================================
