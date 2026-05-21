@@ -939,6 +939,12 @@
     const assigned = colorChoices[clientId];
     if (statusEl) statusEl.textContent = 'ゲーム開始ボタンを押してゲームを始めてください。';
     
+    // 下部の説明テキストを非表示にする
+    const instructionEl = document.getElementById('online-instruction');
+    if (instructionEl) {
+      instructionEl.style.display = 'none';
+    }
+    
     const btnGameStart = document.getElementById('btn-online-game-start');
     if (btnGameStart) {
       btnGameStart.style.display = 'block';
