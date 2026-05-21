@@ -794,7 +794,9 @@
         if (payload.clientId === clientId) return;
         if (!roomMatched) {
           roomMatched = true;
-          if (statusEl) statusEl.textContent = '合言葉が一致しました。色を選択してください。';
+          const titleEl = document.getElementById('online-title');
+          if (titleEl) titleEl.textContent = '合言葉が一致しました — 色を選んでください';
+          if (statusEl) statusEl.textContent = '相手を待っています...';
           if (modal) modal.showModal();
           enableColorButtons(true);
           onlineChannel.send({
@@ -808,7 +810,9 @@
         if (payload.clientId === clientId) return;
         if (!roomMatched) {
           roomMatched = true;
-          if (statusEl) statusEl.textContent = '合言葉が一致しました。色を選択してください。';
+          const titleEl = document.getElementById('online-title');
+          if (titleEl) titleEl.textContent = '合言葉が一致しました — 色を選んでください';
+          if (statusEl) statusEl.textContent = '相手を待っています...';
           if (modal) modal.showModal();
           enableColorButtons(true);
         }
@@ -938,6 +942,10 @@
 
     const assigned = colorChoices[clientId];
     if (statusEl) statusEl.textContent = 'ゲーム開始ボタンを押してゲームを始めてください。';
+    
+    // タイトルを更新
+    const titleEl = document.getElementById('online-title');
+    if (titleEl) titleEl.textContent = 'ゲーム開始準備完了 — 開始ボタンを押してください';
     
     // 下部の説明テキストを非表示にする
     const instructionEl = document.getElementById('online-instruction');
