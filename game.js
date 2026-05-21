@@ -165,6 +165,13 @@
     return "とても強い";
   }
 
+  function updateCpuLevelLabel(level) {
+    const labelEl = document.getElementById('setup-level-label');
+    if (labelEl) {
+      labelEl.textContent = levelDescription(parseInt(level, 10));
+    }
+  }
+
   function roleFor(player) {
     if (vsCpu) {
       if (player === humanColor) return "（あなた）";
@@ -642,11 +649,11 @@
   function readSetupConfig() {
     const modeEl = setupFormEl.querySelector('input[name="mode"]:checked');
     const colorEl = setupFormEl.querySelector('input[name="color"]:checked');
-    const levelEl = setupFormEl.querySelector('input[name="level"]:checked');
+    const levelEl = document.getElementById('setup-level');
     
     const modeVal = modeEl ? modeEl.value : "cpu";
     const colorVal = colorEl ? colorEl.value : "black";
-    const levelVal = levelEl ? levelEl.value : "2";
+    const levelVal = levelEl ? levelEl.value : "3";
     
     const hintCheckbox = document.getElementById("setup-hint");
     const hintVal = hintCheckbox ? hintCheckbox.checked : false;
@@ -675,6 +682,10 @@
   setupFormEl.querySelectorAll('input[name="mode"]').forEach((input) => {
     input.addEventListener("change", updateSetupLabels);
   });
+  const setupLevelInput = document.getElementById('setup-level');
+  if (setupLevelInput) {
+    setupLevelInput.addEventListener('input', () => updateCpuLevelLabel(setupLevelInput.value));
+  }
 
   document.getElementById("btn-restart").addEventListener("click", showSetup);
   document.getElementById("btn-modal-restart").addEventListener("click", showSetup);
@@ -1065,6 +1076,10 @@
     const levelControl = document.getElementById("cpu-level-control");
     if (levelControl) {
       levelControl.style.display = isCpu ? "block" : "none";
+    }
+    const levelSlider = document.getElementById("setup-level");
+    if (levelSlider) {
+      updateCpuLevelLabel(levelSlider.value);
     }
 
     const colorSection = colorLegendEl.closest('div');

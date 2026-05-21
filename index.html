@@ -109,23 +109,11 @@
 
         <div id="cpu-level-control" style="margin-bottom: 20px;">
           <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px; font-weight: bold;">CPUの強さ</p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <label style="flex: 1 1 40%; text-align: center; background: #334155; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
-              <input type="radio" name="level" value="1" style="cursor: pointer;"><br>1（とても弱い）
-            </label>
-            <label style="flex: 1 1 40%; text-align: center; background: #334155; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
-              <input type="radio" name="level" value="2" style="cursor: pointer;"><br>2（弱い）
-            </label>
-            <label style="flex: 1 1 40%; text-align: center; background: #334155; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
-              <input type="radio" name="level" value="3" checked style="cursor: pointer;"><br>3（普通）
-            </label>
-            <label style="flex: 1 1 40%; text-align: center; background: #334155; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
-              <input type="radio" name="level" value="4" style="cursor: pointer;"><br>4（強い）
-            </label>
-            <label style="flex: 1 1 40%; text-align: center; background: #334155; padding: 10px 4px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
-              <input type="radio" name="level" value="5" style="cursor: pointer;"><br>5（とても強い）
-            </label>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <input id="setup-level" type="range" name="level" min="1" max="5" step="1" value="3" style="flex: 1; cursor: pointer;">
+            <span id="setup-level-label" style="min-width: 96px; text-align: center; font-size: 0.9rem; color: #f8fafc;">普通</span>
           </div>
+          <p style="font-size:0.75rem; color:#64748b; margin-top:8px;">1が最も簡単、5が最も難しいです。</p>
         </div>
 
         <div style="margin-bottom: 20px;">
