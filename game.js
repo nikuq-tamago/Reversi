@@ -792,8 +792,6 @@
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    const titleEl = document.getElementById('online-title');
-    if (titleEl) titleEl.textContent = '色を選択してください';
     if (statusEl) statusEl.textContent = '色を選択してください';
     if (modal) modal.showModal();
     const btnStart = document.getElementById('btn-online-game-start');
