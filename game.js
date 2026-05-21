@@ -811,22 +811,34 @@
     const btnWhite = document.getElementById('btn-online-white');
     const btnCancel = document.getElementById('btn-online-cancel');
     
-    // 古いイベントリスナーを削除してから新しく登録
+    // --- 【黒ボタンの処理】 ---
     if (btnBlack) {
       const newBtnBlack = btnBlack.cloneNode(true);
       btnBlack.parentNode.replaceChild(newBtnBlack, btnBlack);
       newBtnBlack.addEventListener('click', () => {
         if (!roomMatched) return;
+        
+        // 1. まず相手に選んだ色を送信する（既存の処理）
         sendOnlineColorChoice('black', hintInit, statusEl, modal);
+        
+        // 2. 【追加】ここで見た目を切り替える関数を呼び出す！
+        updateColorButtonState('black');
       });
     }
-    
+
+    // --- 【白ボタンの処理】 ---
+    // すぐ近くにある白ボタン（btnWhite）の処理も同じように修正します
     if (btnWhite) {
       const newBtnWhite = btnWhite.cloneNode(true);
       btnWhite.parentNode.replaceChild(newBtnWhite, btnWhite);
       newBtnWhite.addEventListener('click', () => {
         if (!roomMatched) return;
+        
+        // 1. まず相手に選んだ色を送信する（既存の処理）
         sendOnlineColorChoice('white', hintInit, statusEl, modal);
+        
+        // 2. 【追加】ここで見た目を切り替える関数を呼び出す！
+        updateColorButtonState('white');
       });
     }
     
@@ -843,27 +855,28 @@
 
   function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
     if (!onlineChannel) return;
-    
-    // 自分の色を保存
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    if (btnBlack && btnWhite) {
+      btnBlack.classList.remove('btn-selected');
+      btnWhite.classList.remove('btn-selected');
+      if (color === 'black') {
+        btnBlack.classList.add('btn-selected');
+      } else {
+        btnWhite.classList.add('btn-selected');
+      }
+    }
+
     colorChoices[clientId] = color;
-    
-    // ボタン状態を更新
-    updateColorButtonState(color);
-    
-    // メッセージを更新
     if (statusEl) statusEl.textContent = `あなたは${color === 'black' ? '黒' : '白'}を選択しました。相手の選択を待っています。`;
 
-    // 相手に色選択を通知
     onlineChannel.send({
       type: 'broadcast',
       event: 'color',
       payload: { clientId, color }
     });
 
-    // 相手の選択を確認
-    setTimeout(() => {
-      resolveOnlineColors(hintInit, statusEl, modal);
-    }, 100);
+    resolveOnlineColors(hintInit, statusEl, modal);
   }
 
   function resolveOnlineColors(hintInit, statusEl, modal) {
