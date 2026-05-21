@@ -150,9 +150,19 @@
   }
 
   function levelName(level) {
-    if (level === 1) return "（弱いCPU）";
-    if (level === 2) return "（普通CPU）";
-    return "（強いCPU）";
+    if (level === 1) return "（とても弱いCPU）";
+    if (level === 2) return "（弱いCPU）";
+    if (level === 3) return "（普通CPU）";
+    if (level === 4) return "（強いCPU）";
+    return "（とても強いCPU）";
+  }
+
+  function levelDescription(level) {
+    if (level === 1) return "とても弱い";
+    if (level === 2) return "弱い";
+    if (level === 3) return "普通";
+    if (level === 4) return "強い";
+    return "とても強い";
   }
 
   function roleFor(player) {
@@ -171,11 +181,9 @@
     labelBlackEl.textContent = `黒${roleFor(BLACK)}`;
     labelWhiteEl.textContent = `白${roleFor(WHITE)}`;
     
-    let modeText = "2人対戦";
+    let modeText = "1人対戦";
     if (vsCpu) {
-      if (cpuLevel === 1) modeText = "CPU対戦 (弱い)";
-      else if (cpuLevel === 2) modeText = "CPU対戦 (普通)";
-      else modeText = "CPU対戦 (強い)";
+      modeText = `CPU対戦 (${levelDescription(cpuLevel)})`;
     } else if (networked) {
       modeText = "オンライン対戦";
     }
@@ -354,7 +362,9 @@
 
     let depth = 5;
     if (cpuLevel === 1) depth = 1;
-    else if (cpuLevel === 2) depth = 3;
+    else if (cpuLevel === 2) depth = 2;
+    else if (cpuLevel === 3) depth = 3;
+    else if (cpuLevel === 4) depth = 4;
 
     let bestScore = (cpuLevel === 1) ? Infinity : -Infinity;
     let selectedKeys = [];
