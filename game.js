@@ -710,20 +710,32 @@
     }
   }
 
+  // =========================================================================
+  // 【完全修正版】オンライン色選択ボタンの見た目を制御する関数
+  // =========================================================================
   function updateColorButtonState(selectedColor) {
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
     
-    // 両方のボタンから btn-selected を削除
-    if (btnBlack) btnBlack.classList.remove('btn-selected');
-    if (btnWhite) btnWhite.classList.remove('btn-selected');
+    // 1. まず両方のボタンから、CSSクラスと、直接塗られたスタイル背景色を根こそぎ消す
+    if (btnBlack) {
+      btnBlack.classList.remove('btn-selected');
+      btnBlack.style.removeProperty('background-color');
+    }
+    if (btnWhite) {
+      btnWhite.classList.remove('btn-selected');
+      btnWhite.style.removeProperty('background-color');
+    }
     
-    // 選択されたボタンに btn-selected を追加
+    // 2. 選択された色（'black' または 'white'）に応じて、!importantに勝つように直接青色を塗る
     if (selectedColor === 'black' && btnBlack) {
       btnBlack.classList.add('btn-selected');
+      btnBlack.style.setProperty('background-color', '#2563eb', 'important');
     } else if (selectedColor === 'white' && btnWhite) {
       btnWhite.classList.add('btn-selected');
+      btnWhite.style.setProperty('background-color', '#2563eb', 'important');
     }
+    // ※ selectedColor が 'none' や null の場合は、1の消去処理だけが走るため、両方とも未選択（光っていない状態）になります
   }
 
   function closeOnlineModal() {
