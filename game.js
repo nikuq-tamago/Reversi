@@ -724,8 +724,11 @@
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
       btnStart.style.display = 'none';
+      btnStart.disabled = true;
       btnStart.onclick = null;
     }
+    const titleEl = document.getElementById('online-title');
+    if (titleEl) titleEl.textContent = '色を選択してください';
     const instructionEl = document.getElementById('online-instruction');
     if (instructionEl) {
       instructionEl.style.display = 'block';
@@ -789,11 +792,14 @@
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    if (statusEl) statusEl.textContent = '相手を待っています…';
+    const titleEl = document.getElementById('online-title');
+    if (titleEl) titleEl.textContent = '色を選択してください';
+    if (statusEl) statusEl.textContent = '色を選択してください';
     if (modal) modal.showModal();
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
       btnStart.style.display = 'none';
+      btnStart.disabled = true;
       btnStart.onclick = null;
     }
     const instructionEl = document.getElementById('online-instruction');
@@ -813,7 +819,7 @@
         if (!roomMatched) {
           roomMatched = true;
           const titleEl = document.getElementById('online-title');
-          if (titleEl) titleEl.textContent = '待機画面';
+          if (titleEl) titleEl.textContent = '色を選択してください';
           const instructionEl = document.getElementById('online-instruction');
           if (instructionEl) instructionEl.style.display = 'block';
           if (statusEl) statusEl.textContent = '色を選択してください。';
@@ -831,7 +837,7 @@
         if (!roomMatched) {
           roomMatched = true;
           const titleEl = document.getElementById('online-title');
-          if (titleEl) titleEl.textContent = '待機画面';
+          if (titleEl) titleEl.textContent = '色を選択してください';
           const instructionEl = document.getElementById('online-instruction');
           if (instructionEl) instructionEl.style.display = 'block';
           if (statusEl) statusEl.textContent = '色を選択してください。';
@@ -926,6 +932,16 @@
 
   function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
     if (!onlineChannel) return;
+    const btnGameStart = document.getElementById('btn-online-game-start');
+    if (btnGameStart) {
+      btnGameStart.style.display = 'none';
+      btnGameStart.disabled = true;
+      btnGameStart.onclick = null;
+    }
+    const titleEl = document.getElementById('online-title');
+    if (titleEl) titleEl.textContent = '色を選択してください';
+    const instructionEl = document.getElementById('online-instruction');
+    if (instructionEl) instructionEl.style.display = 'block';
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
     if (btnBlack && btnWhite) {
@@ -978,6 +994,7 @@
     const btnGameStart = document.getElementById('btn-online-game-start');
     if (btnGameStart) {
       btnGameStart.style.display = 'block';
+      btnGameStart.disabled = false;
       btnGameStart.onclick = () => {
         if (modal) modal.close();
         startGame({ mode: 'pvp', level: '2', color: assigned, hintInit });
