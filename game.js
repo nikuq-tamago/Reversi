@@ -609,10 +609,8 @@
   function showSetup() {
     gameOver = true;
     cpuThinking = false;
-    const onlineModal = document.getElementById('modal-online-color');
-    if (onlineModal && onlineModal.open) {
-      onlineModal.close();
-    }
+    closeOnlineModal();
+    resetOnlineSelection();
     if (onlineChannel) {
       onlineChannel.unsubscribe();
       onlineChannel = null;
@@ -623,6 +621,7 @@
     room = null;
     roomMatched = false;
 
+    enableColorButtons(false);
     gameAreaEl.classList.add("game-area--hidden");
     gameoverModalEl.close();
     setupModalEl.showModal();
@@ -700,6 +699,24 @@
     }
   }
 
+  function resetOnlineSelection() {
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    if (btnBlack) {
+      btnBlack.classList.remove('btn-selected');
+    }
+    if (btnWhite) {
+      btnWhite.classList.remove('btn-selected');
+    }
+  }
+
+  function closeOnlineModal() {
+    const onlineModal = document.getElementById('modal-online-color');
+    if (onlineModal && onlineModal.open) {
+      onlineModal.close();
+    }
+  }
+
   function startOnlineGame(passphrase, hintInit) {
     if (!passphrase) {
       alert('合言葉を入力してください');
@@ -715,6 +732,7 @@
     myColor = null;
     opponentColor = null;
 
+    resetOnlineSelection();
     messageEl.textContent = '合言葉待機中… ' + room;
 
     const modal = document.getElementById('modal-online-color');
@@ -761,7 +779,7 @@
       });
 
     onlineChannel.subscribe();
-    setTimeout(() => {
+    const broadcastJoin = () => {
       if (onlineChannel) {
         onlineChannel.send({
           type: 'broadcast',
@@ -769,7 +787,9 @@
           payload: { clientId }
         });
       }
-    }, 200);
+    };
+    setTimeout(broadcastJoin, 200);
+    setTimeout(broadcastJoin, 1200);
 
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
