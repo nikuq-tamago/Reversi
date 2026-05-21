@@ -838,7 +838,6 @@
     const uniqueColors = [...new Set(colors)];
     if (uniqueColors.length === 1) {
       if (statusEl) statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
-      colorChoices = { [clientId]: colorChoices[clientId] };
       const btnBlack = document.getElementById('btn-online-black');
       const btnWhite = document.getElementById('btn-online-white');
       if (btnBlack) btnBlack.classList.remove('btn-selected');

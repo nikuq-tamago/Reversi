@@ -244,6 +244,23 @@ body {
   }
 }
 
+.btn-selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+  border: 2px solid #60a5fa;
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-selected.btn--secondary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ==========================================================================
    5. メッセージ ＆ 操作ボタン
    ========================================================================== */
