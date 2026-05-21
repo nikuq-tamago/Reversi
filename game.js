@@ -790,7 +790,7 @@
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    if (statusEl) statusEl.textContent = '色を選択してください';
+    if (statusEl) statusEl.textContent = '合言葉待機中';
     if (modal) modal.showModal();
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
