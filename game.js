@@ -811,33 +811,32 @@
     const btnWhite = document.getElementById('btn-online-white');
     const btnCancel = document.getElementById('btn-online-cancel');
     
-    // --- 【黒ボタンの処理】 ---
+   // --- 【黒ボタンの処理】 ---
     if (btnBlack) {
       const newBtnBlack = btnBlack.cloneNode(true);
       btnBlack.parentNode.replaceChild(newBtnBlack, btnBlack);
       newBtnBlack.addEventListener('click', () => {
         if (!roomMatched) return;
         
-        // 1. まず相手に選んだ色を送信する（既存の処理）
+        // 1. 相手に「黒を選んだよ」と送信
         sendOnlineColorChoice('black', hintInit, statusEl, modal);
         
-        // 2. 【追加】ここで見た目を切り替える関数を呼び出す！
+        // 2. 自分の画面のボタンの見た目を「黒が選択された状態」にする
         updateColorButtonState('black');
       });
     }
 
     // --- 【白ボタンの処理】 ---
-    // すぐ近くにある白ボタン（btnWhite）の処理も同じように修正します
     if (btnWhite) {
       const newBtnWhite = btnWhite.cloneNode(true);
       btnWhite.parentNode.replaceChild(newBtnWhite, btnWhite);
       newBtnWhite.addEventListener('click', () => {
         if (!roomMatched) return;
         
-        // 1. まず相手に選んだ色を送信する（既存の処理）
+        // 1. 相手に「白を選んだよ」と送信
         sendOnlineColorChoice('white', hintInit, statusEl, modal);
         
-        // 2. 【追加】ここで見た目を切り替える関数を呼び出す！
+        // 2. 自分の画面のボタンの見た目を「白が選択された状態」にする
         updateColorButtonState('white');
       });
     }
