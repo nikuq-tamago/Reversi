@@ -31,10 +31,15 @@
   const subtitleEl = document.getElementById("subtitle");
   const setupModalEl = document.getElementById("modal-setup");
   const setupFormEl = document.getElementById("setup-form");
+  const onlinePassphraseEl = document.getElementById("online-passphrase");
+  const passphraseInput = document.getElementById("setup-passphrase");
   const colorLegendEl = document.getElementById("color-legend");
   const colorHintEl = document.getElementById("color-hint");
   const gameoverModalEl = document.getElementById("modal-gameover");
   const modalBodyEl = document.getElementById("modal-body");
+
+  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co/rest/v1/";
+  const SUPABASE_ANON_KEY = "sb_publishable_SThaSyCH5PIWMr-X5SkeCA_kiYBMz_3";
 
   let board;
   let currentPlayer;
@@ -47,6 +52,14 @@
   let cpuColor;
   let cpuThinking;
   let isTransitioning = false; // ✨ ターン移行中の連打を禁止する絶対ロックフラグ
+  let myColor = null;
+  let opponentColor = null;
+  let networked = false;
+  let supabaseClient = null;
+  let onlineChannel = null;
+  let clientId = null;
+  let colorChoices = {};
+  let room = null;
 
   function createBoard() {
     board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
@@ -140,9 +153,15 @@
   }
 
   function roleFor(player) {
-    if (!vsCpu) return "";
-    if (player === humanColor) return "（あなた）";
-    return levelName(cpuLevel);
+    if (vsCpu) {
+      if (player === humanColor) return "（あなた）";
+      return levelName(cpuLevel);
+    }
+    if (networked) {
+      if (player === myColor) return "（あなた）";
+      return "（相手）";
+    }
+    return "";
   }
 
   function updatePlayerLabels() {
@@ -154,18 +173,25 @@
       if (cpuLevel === 1) modeText = "CPU対戦 (弱い)";
       else if (cpuLevel === 2) modeText = "CPU対戦 (普通)";
       else modeText = "CPU対戦 (強い)";
+    } else if (networked) {
+      modeText = "オンライン対戦";
     }
     subtitleEl.textContent = `${modeText} — 黒が先手`;
 
-    cardBlackEl.classList.toggle("is-you", vsCpu && humanColor === BLACK);
-    cardWhiteEl.classList.toggle("is-you", vsCpu && humanColor === WHITE);
+    cardBlackEl.classList.toggle("is-you", (vsCpu && humanColor === BLACK) || (networked && myColor === BLACK));
+    cardWhiteEl.classList.toggle("is-you", (vsCpu && humanColor === WHITE) || (networked && myColor === WHITE));
   }
 
   function turnLabel() {
     if (gameOver) return "終了";
-    if (!vsCpu) return `${colorName(currentPlayer)}の番`;
-    if (currentPlayer === humanColor) return "あなたの番";
-    return "CPUの手番…";
+    if (vsCpu) {
+      if (currentPlayer === humanColor) return "あなたの番";
+      return "CPUの手番…";
+    }
+    if (networked) {
+      return currentPlayer === myColor ? "あなたの番" : "相手の番";
+    }
+    return `${colorName(currentPlayer)}の番`;
   }
 
   function isCpuTurn() {
@@ -187,7 +213,7 @@
   function renderBoard(animateFlips) {
     boardEl.innerHTML = "";
     
-    const isHumanTurn = !gameOver && (!vsCpu || currentPlayer === humanColor);
+    const isHumanTurn = !gameOver && ((vsCpu && currentPlayer === humanColor) || (networked && currentPlayer === myColor) || (!vsCpu && !networked));
 
     for (let r = 0; r < SIZE; r++) {
       for (let c = 0; c < SIZE; c++) {
@@ -413,7 +439,25 @@
     }
 
     messageEl.textContent = "";
-    
+
+    if (networked && currentPlayer !== myColor) {
+      isTransitioning = false;
+      return;
+    }
+
+    if (networked && onlineChannel) {
+      onlineChannel.send({
+        type: 'broadcast',
+        event: 'move',
+        payload: {
+          clientId,
+          row,
+          col,
+          color: currentPlayer === BLACK ? 'black' : 'white'
+        }
+      });
+    }
+
     endTurn(flippedKeys);
   }
 
@@ -527,8 +571,21 @@
   function startGame(config) {
     vsCpu = config.mode === "cpu";
     cpuLevel = parseInt(config.level, 10);
-    humanColor = config.color === "black" ? BLACK : WHITE;
-    cpuColor = vsCpu ? opponent(humanColor) : null;
+    cpuColor = null;
+    myColor = null;
+    opponentColor = null;
+
+    if (vsCpu) {
+      humanColor = config.color === "black" ? BLACK : WHITE;
+      myColor = humanColor;
+      cpuColor = opponent(humanColor);
+    } else if (networked) {
+      myColor = config.color === "black" ? BLACK : WHITE;
+      opponentColor = opponent(myColor);
+      humanColor = null;
+    } else {
+      humanColor = null;
+    }
 
     createBoard();
     currentPlayer = BLACK;
@@ -551,6 +608,15 @@
   function showSetup() {
     gameOver = true;
     cpuThinking = false;
+    if (onlineChannel) {
+      onlineChannel.unsubscribe();
+      onlineChannel = null;
+    }
+    networked = false;
+    myColor = null;
+    opponentColor = null;
+    room = null;
+
     gameAreaEl.classList.add("game-area--hidden");
     gameoverModalEl.close();
     setupModalEl.showModal();
@@ -568,17 +634,25 @@
     const hintCheckbox = document.getElementById("setup-hint");
     const hintVal = hintCheckbox ? hintCheckbox.checked : false;
 
+    const pass = passphraseInput ? passphraseInput.value.trim() : "";
+
     return {
       mode: modeVal,
       level: levelVal,
       color: colorVal,
-      hintInit: hintVal
+      hintInit: hintVal,
+      passphrase: pass
     };
   }
 
   setupFormEl.addEventListener("submit", (e) => {
     e.preventDefault();
-    startGame(readSetupConfig());
+    const cfg = readSetupConfig();
+    if (cfg.mode === "online") {
+      startOnlineGame(cfg.passphrase, cfg.hintInit);
+    } else {
+      startGame(cfg);
+    }
   });
 
   setupFormEl.querySelectorAll('input[name="mode"]').forEach((input) => {
@@ -596,9 +670,121 @@
     updateHintButtonText();
   }
 
+  // --- ネット対戦関連 ---
+  function setupSupabaseClient() {
+    if (!supabaseClient) {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  }
+
+  function createClientId() {
+    return `c_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
+  }
+
+  function startOnlineGame(passphrase, hintInit) {
+    if (!passphrase) {
+      alert('合言葉を入力してください');
+      return;
+    }
+
+    setupSupabaseClient();
+    room = passphrase;
+    clientId = createClientId();
+    colorChoices = {};
+    networked = true;
+    myColor = null;
+    opponentColor = null;
+
+    messageEl.textContent = '合言葉待機中… ' + room;
+
+    const modal = document.getElementById('modal-online-color');
+    const statusEl = document.getElementById('online-status');
+    if (statusEl) statusEl.textContent = '色を選択してください。';
+    if (modal) modal.showModal();
+
+    if (onlineChannel) {
+      onlineChannel.unsubscribe();
+      onlineChannel = null;
+    }
+
+    onlineChannel = supabaseClient.channel(`room-${room}`)
+      .on('broadcast', { event: 'color' }, ({ payload }) => {
+        if (payload.clientId === clientId) return;
+        colorChoices[payload.clientId] = payload.color;
+        resolveOnlineColors(hintInit, statusEl, modal);
+      })
+      .on('broadcast', { event: 'move' }, ({ payload }) => {
+        if (payload.clientId === clientId) return;
+        handleRemoteMove(payload);
+      });
+
+    onlineChannel.subscribe();
+
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    if (btnBlack) btnBlack.onclick = () => {
+      sendOnlineColorChoice('black', hintInit, statusEl, modal);
+    };
+    if (btnWhite) btnWhite.onclick = () => {
+      sendOnlineColorChoice('white', hintInit, statusEl, modal);
+    };
+  }
+
+  function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
+    if (!onlineChannel) return;
+    colorChoices[clientId] = color;
+    if (statusEl) statusEl.textContent = `あなたは${color === 'black' ? '黒' : '白'}を選択しました。相手の選択を待っています。`;
+
+    onlineChannel.send({
+      type: 'broadcast',
+      event: 'color',
+      payload: { clientId, color }
+    });
+
+    resolveOnlineColors(hintInit, statusEl, modal);
+  }
+
+  function resolveOnlineColors(hintInit, statusEl, modal) {
+    const ids = Object.keys(colorChoices);
+    if (ids.length < 2) return;
+
+    const colors = ids.map((id) => colorChoices[id]);
+    const uniqueColors = [...new Set(colors)];
+    if (uniqueColors.length === 1) {
+      if (statusEl) statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
+      colorChoices = { [clientId]: colorChoices[clientId] };
+      return;
+    }
+
+    const assigned = colorChoices[clientId];
+    if (modal) modal.close();
+    startGame({ mode: 'pvp', level: '2', color: assigned, hintInit });
+    messageEl.textContent = '対局開始 — あなたは ' + (assigned === 'black' ? '黒（先手）' : '白（後手）');
+  }
+
+  function handleRemoteMove(payload) {
+    const row = payload.row;
+    const col = payload.col;
+    const playerColor = payload.color === 'black' ? BLACK : WHITE;
+
+    currentPlayer = playerColor;
+    const flips = getFlipsOn(board, row, col, playerColor);
+    board[row][col] = playerColor;
+    const flippedKeys = new Set();
+    if (flips) {
+      for (const [fr, fc] of flips) {
+        board[fr][fc] = playerColor;
+        flippedKeys.add(`${fr},${fc}`);
+      }
+    }
+    endTurn(flippedKeys);
+  }
+
   function updateSetupLabels() {
     const checkedMode = setupFormEl.querySelector('input[name="mode"]:checked');
-    const isCpu = checkedMode ? (checkedMode.value === "cpu") : true;
+    const modeVal = checkedMode ? checkedMode.value : "cpu";
+    const isCpu = modeVal === "cpu";
+    const isOnline = modeVal === "online";
     
     const levelControl = document.getElementById("cpu-level-control");
     if (levelControl) {
@@ -624,6 +810,10 @@
           input.checked = true;
         }
       });
+    }
+
+    if (onlinePassphraseEl) {
+      onlinePassphraseEl.style.display = isOnline ? "block" : "none";
     }
   }
 })();
