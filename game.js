@@ -795,7 +795,7 @@
         if (!roomMatched) {
           roomMatched = true;
           const titleEl = document.getElementById('online-title');
-          if (titleEl) titleEl.textContent = '合言葉が一致しました — 色を選んでください';
+          if (titleEl) titleEl.textContent = '待機画面';
           if (statusEl) statusEl.textContent = '相手を待っています...';
           if (modal) modal.showModal();
           enableColorButtons(true);
@@ -811,7 +811,7 @@
         if (!roomMatched) {
           roomMatched = true;
           const titleEl = document.getElementById('online-title');
-          if (titleEl) titleEl.textContent = '合言葉が一致しました — 色を選んでください';
+          if (titleEl) titleEl.textContent = '待機画面';
           if (statusEl) statusEl.textContent = '相手を待っています...';
           if (modal) modal.showModal();
           enableColorButtons(true);
