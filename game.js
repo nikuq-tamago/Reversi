@@ -5,6 +5,7 @@
   const BLACK = 1;
   const WHITE = 2;
   const SIZE = 8;
+  const MAX_ONLINE_PLAYERS = 2;
 
   const DIRECTIONS = [
     [-1, -1], [-1, 0], [-1, 1],
@@ -61,6 +62,7 @@
   let colorChoices = {};
   let room = null;
   let roomMatched = false;
+  let onlineOccupants = new Set();
 
   function createBoard() {
     board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
@@ -737,6 +739,23 @@
     }
   }
 
+  function setRoomFullState(statusEl) {
+    if (statusEl) {
+      statusEl.textContent = '部屋が満員です。他の合言葉を試してください。';
+    }
+    enableColorButtons(false);
+    const instructionEl = document.getElementById('online-instruction');
+    if (instructionEl) {
+      instructionEl.style.display = 'none';
+    }
+    const btnStart = document.getElementById('btn-online-game-start');
+    if (btnStart) {
+      btnStart.style.display = 'none';
+      btnStart.disabled = true;
+      btnStart.onclick = null;
+    }
+  }
+
   function broadcastResetSelection() {
     if (onlineChannel) {
       onlineChannel.send({
@@ -781,6 +800,7 @@
     clientId = createClientId();
     colorChoices = {};
     roomMatched = false;
+    onlineOccupants = new Set([clientId]);
     networked = true;
     myColor = null;
     opponentColor = null;
@@ -812,6 +832,20 @@
     onlineChannel = supabaseClient.channel(`room-${room}`)
       .on('broadcast', { event: 'join' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
+        if (onlineOccupants.has(payload.clientId)) return;
+        if (onlineOccupants.size >= MAX_ONLINE_PLAYERS) {
+          onlineChannel.send({
+            type: 'broadcast',
+            event: 'full',
+            payload: {
+              targetClientId: payload.clientId,
+              clientId
+            }
+          });
+          return;
+        }
+
+        onlineOccupants.add(payload.clientId);
         if (!roomMatched) {
           roomMatched = true;
           const instructionEl = document.getElementById('online-instruction');
@@ -836,6 +870,10 @@
           if (modal) modal.showModal();
           enableColorButtons(true);
         }
+      })
+      .on('broadcast', { event: 'full' }, ({ payload }) => {
+        if (payload.targetClientId !== clientId) return;
+        setRoomFullState(statusEl);
       })
       .on('broadcast', { event: 'color' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
@@ -957,7 +995,7 @@
   }
 
   function resolveOnlineColors(hintInit, statusEl, modal) {
-    const ids = Object.keys(colorChoices);
+    const ids = Object.keys(colorChoices).slice(0, MAX_ONLINE_PLAYERS);
     if (ids.length < 2) return;
 
     const colors = ids.map((id) => colorChoices[id]);
