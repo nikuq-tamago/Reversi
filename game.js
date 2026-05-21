@@ -727,8 +727,6 @@
       btnStart.disabled = true;
       btnStart.onclick = null;
     }
-    const titleEl = document.getElementById('online-title');
-    if (titleEl) titleEl.textContent = '色を選択してください';
     const instructionEl = document.getElementById('online-instruction');
     if (instructionEl) {
       instructionEl.style.display = 'block';
@@ -816,8 +814,6 @@
         if (payload.clientId === clientId) return;
         if (!roomMatched) {
           roomMatched = true;
-          const titleEl = document.getElementById('online-title');
-          if (titleEl) titleEl.textContent = '色を選択してください';
           const instructionEl = document.getElementById('online-instruction');
           if (instructionEl) instructionEl.style.display = 'block';
           if (statusEl) statusEl.textContent = '色を選択してください。';
@@ -834,8 +830,6 @@
         if (payload.clientId === clientId) return;
         if (!roomMatched) {
           roomMatched = true;
-          const titleEl = document.getElementById('online-title');
-          if (titleEl) titleEl.textContent = '色を選択してください';
           const instructionEl = document.getElementById('online-instruction');
           if (instructionEl) instructionEl.style.display = 'block';
           if (statusEl) statusEl.textContent = '色を選択してください。';
@@ -936,8 +930,6 @@
       btnGameStart.disabled = true;
       btnGameStart.onclick = null;
     }
-    const titleEl = document.getElementById('online-title');
-    if (titleEl) titleEl.textContent = '色を選択してください';
     const instructionEl = document.getElementById('online-instruction');
     if (instructionEl) instructionEl.style.display = 'block';
     const btnBlack = document.getElementById('btn-online-black');
@@ -978,10 +970,6 @@
 
     const assigned = colorChoices[clientId];
     if (statusEl) statusEl.textContent = 'ゲーム開始ボタンを押してゲームを始めてください。';
-    
-    // タイトルを更新
-    const titleEl = document.getElementById('online-title');
-    if (titleEl) titleEl.textContent = 'ゲーム開始準備完了 — 開始ボタンを押してください';
     
     // 下部の説明テキストを非表示にする
     const instructionEl = document.getElementById('online-instruction');
