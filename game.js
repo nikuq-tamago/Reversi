@@ -904,15 +904,14 @@
 
       // 同じ色が選ばれたときは、自分の選択だけを残して再選択を待つ
       colorChoices = { [clientId]: colorChoices[clientId] };
+      resetOnlineSelection();
       const btnBlack = document.getElementById('btn-online-black');
       const btnWhite = document.getElementById('btn-online-white');
       if (btnBlack) {
         btnBlack.style.removeProperty('background-color');
-        btnBlack.classList.remove('btn-selected');
       }
       if (btnWhite) {
         btnWhite.style.removeProperty('background-color');
-        btnWhite.classList.remove('btn-selected');
       }
 
       enableColorButtons(true);
