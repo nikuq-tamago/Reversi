@@ -710,6 +710,22 @@
     }
   }
 
+  function updateColorButtonState(selectedColor) {
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    
+    // 両方のボタンから btn-selected を削除
+    if (btnBlack) btnBlack.classList.remove('btn-selected');
+    if (btnWhite) btnWhite.classList.remove('btn-selected');
+    
+    // 選択されたボタンに btn-selected を追加
+    if (selectedColor === 'black' && btnBlack) {
+      btnBlack.classList.add('btn-selected');
+    } else if (selectedColor === 'white' && btnWhite) {
+      btnWhite.classList.add('btn-selected');
+    }
+  }
+
   function closeOnlineModal() {
     const onlineModal = document.getElementById('modal-online-color');
     if (onlineModal && onlineModal.open) {
@@ -794,40 +810,60 @@
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
     const btnCancel = document.getElementById('btn-online-cancel');
-    if (btnBlack) btnBlack.onclick = () => {
-      if (!roomMatched) return;
-      sendOnlineColorChoice('black', hintInit, statusEl, modal);
-    };
-    if (btnWhite) btnWhite.onclick = () => {
-      if (!roomMatched) return;
-      sendOnlineColorChoice('white', hintInit, statusEl, modal);
-    };
-    if (btnCancel) btnCancel.onclick = () => {
-      showSetup();
-    };
+    
+    // 古いイベントリスナーを削除してから新しく登録
+    if (btnBlack) {
+      const newBtnBlack = btnBlack.cloneNode(true);
+      btnBlack.parentNode.replaceChild(newBtnBlack, btnBlack);
+      newBtnBlack.addEventListener('click', () => {
+        if (!roomMatched) return;
+        sendOnlineColorChoice('black', hintInit, statusEl, modal);
+      });
+    }
+    
+    if (btnWhite) {
+      const newBtnWhite = btnWhite.cloneNode(true);
+      btnWhite.parentNode.replaceChild(newBtnWhite, btnWhite);
+      newBtnWhite.addEventListener('click', () => {
+        if (!roomMatched) return;
+        sendOnlineColorChoice('white', hintInit, statusEl, modal);
+      });
+    }
+    
+    if (btnCancel) {
+      const newBtnCancel = btnCancel.cloneNode(true);
+      btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+      newBtnCancel.addEventListener('click', () => {
+        showSetup();
+      });
+    }
 
     enableColorButtons(false);
   }
 
   function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
     if (!onlineChannel) return;
-    const btnBlack = document.getElementById('btn-online-black');
-    const btnWhite = document.getElementById('btn-online-white');
-    if (btnBlack && btnWhite) {
-      btnBlack.classList.toggle('btn-selected', color === 'black');
-      btnWhite.classList.toggle('btn-selected', color === 'white');
-    }
-
+    
+    // 自分の色を保存
     colorChoices[clientId] = color;
+    
+    // ボタン状態を更新
+    updateColorButtonState(color);
+    
+    // メッセージを更新
     if (statusEl) statusEl.textContent = `あなたは${color === 'black' ? '黒' : '白'}を選択しました。相手の選択を待っています。`;
 
+    // 相手に色選択を通知
     onlineChannel.send({
       type: 'broadcast',
       event: 'color',
       payload: { clientId, color }
     });
 
-    resolveOnlineColors(hintInit, statusEl, modal);
+    // 相手の選択を確認
+    setTimeout(() => {
+      resolveOnlineColors(hintInit, statusEl, modal);
+    }, 100);
   }
 
   function resolveOnlineColors(hintInit, statusEl, modal) {
