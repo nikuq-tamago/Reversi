@@ -721,6 +721,15 @@
     if (btnWhite) {
       btnWhite.style.removeProperty('background-color');
     }
+    const btnStart = document.getElementById('btn-online-game-start');
+    if (btnStart) {
+      btnStart.style.display = 'none';
+      btnStart.onclick = null;
+    }
+    const instructionEl = document.getElementById('online-instruction');
+    if (instructionEl) {
+      instructionEl.style.display = 'block';
+    }
     enableColorButtons(true);
     if (statusEl) {
       statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
@@ -782,6 +791,15 @@
     const statusEl = document.getElementById('online-status');
     if (statusEl) statusEl.textContent = '相手を待っています…';
     if (modal) modal.showModal();
+    const btnStart = document.getElementById('btn-online-game-start');
+    if (btnStart) {
+      btnStart.style.display = 'none';
+      btnStart.onclick = null;
+    }
+    const instructionEl = document.getElementById('online-instruction');
+    if (instructionEl) {
+      instructionEl.style.display = 'block';
+    }
     setupModalEl.close();
 
     if (onlineChannel) {
@@ -796,7 +814,9 @@
           roomMatched = true;
           const titleEl = document.getElementById('online-title');
           if (titleEl) titleEl.textContent = '待機画面';
-          if (statusEl) statusEl.textContent = '相手を待っています...';
+          const instructionEl = document.getElementById('online-instruction');
+          if (instructionEl) instructionEl.style.display = 'block';
+          if (statusEl) statusEl.textContent = '色を選択してください。';
           if (modal) modal.showModal();
           enableColorButtons(true);
           onlineChannel.send({
@@ -812,7 +832,9 @@
           roomMatched = true;
           const titleEl = document.getElementById('online-title');
           if (titleEl) titleEl.textContent = '待機画面';
-          if (statusEl) statusEl.textContent = '相手を待っています...';
+          const instructionEl = document.getElementById('online-instruction');
+          if (instructionEl) instructionEl.style.display = 'block';
+          if (statusEl) statusEl.textContent = '色を選択してください。';
           if (modal) modal.showModal();
           enableColorButtons(true);
         }
