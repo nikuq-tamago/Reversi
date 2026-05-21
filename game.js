@@ -790,7 +790,7 @@
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    if (statusEl) statusEl.textContent = '合言葉待機中';
+    if (statusEl) statusEl.textContent = '合言葉待機中A';
     if (modal) modal.showModal();
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
@@ -816,7 +816,7 @@
           roomMatched = true;
           const instructionEl = document.getElementById('online-instruction');
           if (instructionEl) instructionEl.style.display = 'block';
-          if (statusEl) statusEl.textContent = '合言葉待機中';
+          if (statusEl) statusEl.textContent = '合言葉待機中B';
           if (modal) modal.showModal();
           enableColorButtons(true);
           onlineChannel.send({
