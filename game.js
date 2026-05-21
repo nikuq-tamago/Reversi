@@ -811,33 +811,46 @@
     const btnWhite = document.getElementById('btn-online-white');
     const btnCancel = document.getElementById('btn-online-cancel');
     
-   // --- 【黒ボタンの処理】 ---
+   // =========================================================================
+    // 【修正後】オンライン色選択ボタンのイベント登録（ここを丸ごと上書きします）
+    // =========================================================================
     if (btnBlack) {
       const newBtnBlack = btnBlack.cloneNode(true);
       btnBlack.parentNode.replaceChild(newBtnBlack, btnBlack);
+      
+      // 開いた瞬間は背景色を初期化（どちらも選ばれていない状態にする）
+      newBtnBlack.style.removeProperty('background-color');
+
       newBtnBlack.addEventListener('click', () => {
         if (!roomMatched) return;
         
-        // 1. 相手に「黒を選んだよ」と送信
+        // 1. 相手に黒を選択したことを送信
         sendOnlineColorChoice('black', hintInit, statusEl, modal);
         
-        // 2. 自分の画面のボタンの見た目を「黒が選択された状態」にする
-        updateColorButtonState('black');
+        // 2. 黒ボタンを青く光らせて、白ボタンの光を消す（!importantを上書き）
+        newBtnBlack.style.setProperty('background-color', '#2563eb', 'important');
+        const wBtn = document.getElementById('btn-online-white');
+        if (wBtn) wBtn.style.removeProperty('background-color');
       });
     }
 
-    // --- 【白ボタンの処理】 ---
     if (btnWhite) {
       const newBtnWhite = btnWhite.cloneNode(true);
       btnWhite.parentNode.replaceChild(newBtnWhite, btnWhite);
+      
+      // 開いた瞬間は背景色を初期化（どちらも選ばれていない状態にする）
+      newBtnWhite.style.removeProperty('background-color');
+
       newBtnWhite.addEventListener('click', () => {
         if (!roomMatched) return;
         
-        // 1. 相手に「白を選んだよ」と送信
+        // 1. 相手に白を選択したことを送信
         sendOnlineColorChoice('white', hintInit, statusEl, modal);
         
-        // 2. 自分の画面のボタンの見た目を「白が選択された状態」にする
-        updateColorButtonState('white');
+        // 2. 白ボタンを青く光らせて、黒ボタンの光を消す（!importantを上書き）
+        newBtnWhite.style.setProperty('background-color', '#2563eb', 'important');
+        const bBtn = document.getElementById('btn-online-black');
+        if (bBtn) bBtn.style.removeProperty('background-color');
       });
     }
     
@@ -884,12 +897,21 @@
 
     const colors = ids.map((id) => colorChoices[id]);
     const uniqueColors = [...new Set(colors)];
+    // =========================================================================
+    // 【修正後】同じ色が選ばれて重複したときのリセット処理（ここを丸ごと上書き）
+    // =========================================================================
     if (uniqueColors.length === 1) {
       if (statusEl) statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
+      
+      // 1. 自分の内部データ選択をリセット（最初はどちらも選ばれていない状態に戻す）
+      myChosenColor = null; 
+
+      // 2. 画面上のボタンの青色を強制リセットして未選択状態に戻す（!important対策）
       const btnBlack = document.getElementById('btn-online-black');
       const btnWhite = document.getElementById('btn-online-white');
-      if (btnBlack) btnBlack.classList.remove('btn-selected');
-      if (btnWhite) btnWhite.classList.remove('btn-selected');
+      if (btnBlack) btnBlack.style.removeProperty('background-color');
+      if (btnWhite) btnWhite.style.removeProperty('background-color');
+
       enableColorButtons(true);
       return;
     }
