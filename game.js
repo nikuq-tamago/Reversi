@@ -710,6 +710,33 @@
     }
   }
 
+  function clearOnlineChoiceState(statusEl) {
+    colorChoices = {};
+    resetOnlineSelection();
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    if (btnBlack) {
+      btnBlack.style.removeProperty('background-color');
+    }
+    if (btnWhite) {
+      btnWhite.style.removeProperty('background-color');
+    }
+    enableColorButtons(true);
+    if (statusEl) {
+      statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
+    }
+  }
+
+  function broadcastResetSelection() {
+    if (onlineChannel) {
+      onlineChannel.send({
+        type: 'broadcast',
+        event: 'reset',
+        payload: { clientId }
+      });
+    }
+  }
+
   function updateColorButtonState(selectedColor) {
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
@@ -790,6 +817,10 @@
         if (payload.clientId === clientId) return;
         colorChoices[payload.clientId] = payload.color;
         resolveOnlineColors(hintInit, statusEl, modal);
+      })
+      .on('broadcast', { event: 'reset' }, ({ payload }) => {
+        if (payload.clientId === clientId) return;
+        clearOnlineChoiceState(statusEl);
       })
       .on('broadcast', { event: 'move' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
@@ -900,21 +931,8 @@
     const colors = ids.map((id) => colorChoices[id]);
     const uniqueColors = [...new Set(colors)];
     if (uniqueColors.length === 1) {
-      if (statusEl) statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
-
-      // 同じ色が選ばれたときは、自分の選択だけを残して再選択を待つ
-      colorChoices = { [clientId]: colorChoices[clientId] };
-      resetOnlineSelection();
-      const btnBlack = document.getElementById('btn-online-black');
-      const btnWhite = document.getElementById('btn-online-white');
-      if (btnBlack) {
-        btnBlack.style.removeProperty('background-color');
-      }
-      if (btnWhite) {
-        btnWhite.style.removeProperty('background-color');
-      }
-
-      enableColorButtons(true);
+      clearOnlineChoiceState(statusEl);
+      broadcastResetSelection();
       return;
     }
 
