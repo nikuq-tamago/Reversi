@@ -101,6 +101,9 @@
             <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: #334155; padding: 12px; border-radius: 8px; cursor: pointer;">
               <input type="radio" name="mode" value="pvp" style="cursor: pointer;"> 2人対戦
             </label>
+            <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: #334155; padding: 12px; border-radius: 8px; cursor: pointer;">
+              <input type="radio" name="mode" value="online" style="cursor: pointer;"> ネット対戦
+            </label>
           </div>
         </div>
 
@@ -142,6 +145,12 @@
           </div>
         </div>
 
+        <div id="online-passphrase" style="display:none; margin-bottom: 20px;">
+          <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px; font-weight: bold;">合言葉（半角英数字）</p>
+          <input id="setup-passphrase" name="passphrase" type="text" placeholder="例: amigame123" style="width:100%; padding:12px; border-radius:8px; border: none; background:#0f172a; color:#f8fafc;">
+          <p style="font-size:0.75rem; color:#64748b; margin-top:8px;">同じ合言葉を入力した相手と対局します。</p>
+        </div>
+
         <button type="submit" class="btn btn--primary btn--block" style="padding: 14px; font-size: 1rem; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">ゲーム開始</button>
       </form>
     </div>
@@ -168,6 +177,19 @@
     </div>
   </dialog>
 
+  <dialog class="modal" id="modal-online-color">
+    <div class="modal-content" style="background: #0f172a; color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #334155; text-align:center;">
+      <h3 style="color:#60a5fa; margin-bottom:12px;">合言葉が一致しました — 色を選んでください</h3>
+      <p id="online-status" style="color:#94a3b8; margin-bottom:12px;">相手を待っています...</p>
+      <div style="display:flex; gap:10px; justify-content:center; margin-bottom:12px;">
+        <button id="btn-online-black" class="btn btn--primary">黒を選ぶ（先手）</button>
+        <button id="btn-online-white" class="btn btn--secondary">白を選ぶ（後手）</button>
+      </div>
+      <p style="font-size:0.85rem; color:#64748b;">両者が異なる色を選択したらゲームが始まります。</p>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.34.0/dist/umd/supabase.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
