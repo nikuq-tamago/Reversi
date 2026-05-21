@@ -38,7 +38,7 @@
   const gameoverModalEl = document.getElementById("modal-gameover");
   const modalBodyEl = document.getElementById("modal-body");
 
-  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co/rest/v1/";
+  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_SThaSyCH5PIWMr-X5SkeCA_kiYBMz_3";
 
   let board;
@@ -60,6 +60,7 @@
   let clientId = null;
   let colorChoices = {};
   let room = null;
+  let roomMatched = false;
 
   function createBoard() {
     board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
@@ -608,6 +609,10 @@
   function showSetup() {
     gameOver = true;
     cpuThinking = false;
+    const onlineModal = document.getElementById('modal-online-color');
+    if (onlineModal && onlineModal.open) {
+      onlineModal.close();
+    }
     if (onlineChannel) {
       onlineChannel.unsubscribe();
       onlineChannel = null;
@@ -616,6 +621,7 @@
     myColor = null;
     opponentColor = null;
     room = null;
+    roomMatched = false;
 
     gameAreaEl.classList.add("game-area--hidden");
     gameoverModalEl.close();
@@ -681,6 +687,19 @@
     return `c_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
   }
 
+  function enableColorButtons(enabled) {
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    if (btnBlack) {
+      btnBlack.disabled = !enabled;
+      btnBlack.classList.toggle('btn-disabled', !enabled);
+    }
+    if (btnWhite) {
+      btnWhite.disabled = !enabled;
+      btnWhite.classList.toggle('btn-disabled', !enabled);
+    }
+  }
+
   function startOnlineGame(passphrase, hintInit) {
     if (!passphrase) {
       alert('合言葉を入力してください');
@@ -691,6 +710,7 @@
     room = passphrase;
     clientId = createClientId();
     colorChoices = {};
+    roomMatched = false;
     networked = true;
     myColor = null;
     opponentColor = null;
@@ -699,8 +719,7 @@
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    if (statusEl) statusEl.textContent = '色を選択してください。';
-    if (modal) modal.showModal();
+    if (statusEl) statusEl.textContent = '相手を待っています…';
 
     if (onlineChannel) {
       onlineChannel.unsubscribe();
@@ -708,6 +727,29 @@
     }
 
     onlineChannel = supabaseClient.channel(`room-${room}`)
+      .on('broadcast', { event: 'join' }, ({ payload }) => {
+        if (payload.clientId === clientId) return;
+        if (!roomMatched) {
+          roomMatched = true;
+          if (statusEl) statusEl.textContent = '合言葉が一致しました。色を選択してください。';
+          if (modal) modal.showModal();
+          enableColorButtons(true);
+          onlineChannel.send({
+            type: 'broadcast',
+            event: 'confirm',
+            payload: { clientId }
+          });
+        }
+      })
+      .on('broadcast', { event: 'confirm' }, ({ payload }) => {
+        if (payload.clientId === clientId) return;
+        if (!roomMatched) {
+          roomMatched = true;
+          if (statusEl) statusEl.textContent = '合言葉が一致しました。色を選択してください。';
+          if (modal) modal.showModal();
+          enableColorButtons(true);
+        }
+      })
       .on('broadcast', { event: 'color' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
         colorChoices[payload.clientId] = payload.color;
@@ -719,19 +761,43 @@
       });
 
     onlineChannel.subscribe();
+    setTimeout(() => {
+      if (onlineChannel) {
+        onlineChannel.send({
+          type: 'broadcast',
+          event: 'join',
+          payload: { clientId }
+        });
+      }
+    }, 200);
 
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
+    const btnCancel = document.getElementById('btn-online-cancel');
     if (btnBlack) btnBlack.onclick = () => {
+      if (!roomMatched) return;
       sendOnlineColorChoice('black', hintInit, statusEl, modal);
     };
     if (btnWhite) btnWhite.onclick = () => {
+      if (!roomMatched) return;
       sendOnlineColorChoice('white', hintInit, statusEl, modal);
     };
+    if (btnCancel) btnCancel.onclick = () => {
+      showSetup();
+    };
+
+    enableColorButtons(false);
   }
 
   function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
     if (!onlineChannel) return;
+    const btnBlack = document.getElementById('btn-online-black');
+    const btnWhite = document.getElementById('btn-online-white');
+    if (btnBlack && btnWhite) {
+      btnBlack.classList.toggle('btn-selected', color === 'black');
+      btnWhite.classList.toggle('btn-selected', color === 'white');
+    }
+
     colorChoices[clientId] = color;
     if (statusEl) statusEl.textContent = `あなたは${color === 'black' ? '黒' : '白'}を選択しました。相手の選択を待っています。`;
 
@@ -753,6 +819,11 @@
     if (uniqueColors.length === 1) {
       if (statusEl) statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
       colorChoices = { [clientId]: colorChoices[clientId] };
+      const btnBlack = document.getElementById('btn-online-black');
+      const btnWhite = document.getElementById('btn-online-white');
+      if (btnBlack) btnBlack.classList.remove('btn-selected');
+      if (btnWhite) btnWhite.classList.remove('btn-selected');
+      enableColorButtons(true);
       return;
     }
 
@@ -763,6 +834,7 @@
   }
 
   function handleRemoteMove(payload) {
+    if (!roomMatched) return;
     const row = payload.row;
     const col = payload.col;
     const playerColor = payload.color === 'black' ? BLACK : WHITE;
