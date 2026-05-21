@@ -754,6 +754,8 @@
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
     if (statusEl) statusEl.textContent = '相手を待っています…';
+    if (modal) modal.showModal();
+    setupModalEl.close();
 
     if (onlineChannel) {
       onlineChannel.unsubscribe();
