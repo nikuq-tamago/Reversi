@@ -760,14 +760,29 @@
       onlineChannel = null;
     }
 
+// =========================================================================
+    // 【修正後】マッチング成功時の処理（ここを丸ごと上書きします）
+    // =========================================================================
     onlineChannel = supabaseClient.channel(`room-${room}`)
       .on('broadcast', { event: 'join' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
         if (!roomMatched) {
           roomMatched = true;
           if (statusEl) statusEl.textContent = '合言葉が一致しました。色を選択してください。';
+          
+          // 1. 【追加】開く瞬間に、自分の内部データ選択をリセット
+          myChosenColor = null; 
+
+          // 2. 【追加】開く瞬間に、ボタンの青い色を両方とも強制リセットする
+          const btnBlackInit = document.getElementById('btn-online-black');
+          const btnWhiteInit = document.getElementById('btn-online-white');
+          if (btnBlackInit) btnBlackInit.style.removeProperty('background-color');
+          if (btnWhiteInit) btnWhiteInit.style.removeProperty('background-color');
+
+          // 3. モーダルを表示してボタンを押せるようにする
           if (modal) modal.showModal();
           enableColorButtons(true);
+          
           onlineChannel.send({
             type: 'broadcast',
             event: 'confirm',
