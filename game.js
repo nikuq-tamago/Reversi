@@ -710,32 +710,20 @@
     }
   }
 
-  // =========================================================================
-  // 【完全修正版】オンライン色選択ボタンの見た目を制御する関数
-  // =========================================================================
   function updateColorButtonState(selectedColor) {
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
     
-    // 1. まず両方のボタンから、CSSクラスと、直接塗られたスタイル背景色を根こそぎ消す
-    if (btnBlack) {
-      btnBlack.classList.remove('btn-selected');
-      btnBlack.style.removeProperty('background-color');
-    }
-    if (btnWhite) {
-      btnWhite.classList.remove('btn-selected');
-      btnWhite.style.removeProperty('background-color');
-    }
+    // 両方のボタンから btn-selected を削除
+    if (btnBlack) btnBlack.classList.remove('btn-selected');
+    if (btnWhite) btnWhite.classList.remove('btn-selected');
     
-    // 2. 選択された色（'black' または 'white'）に応じて、!importantに勝つように直接青色を塗る
+    // 選択されたボタンに btn-selected を追加
     if (selectedColor === 'black' && btnBlack) {
       btnBlack.classList.add('btn-selected');
-      btnBlack.style.setProperty('background-color', '#2563eb', 'important');
     } else if (selectedColor === 'white' && btnWhite) {
       btnWhite.classList.add('btn-selected');
-      btnWhite.style.setProperty('background-color', '#2563eb', 'important');
     }
-    // ※ selectedColor が 'none' や null の場合は、1の消去処理だけが走るため、両方とも未選択（光っていない状態）になります
   }
 
   function closeOnlineModal() {
@@ -772,29 +760,14 @@
       onlineChannel = null;
     }
 
-// =========================================================================
-    // 【修正後】マッチング成功時の処理（ここを丸ごと上書きします）
-    // =========================================================================
     onlineChannel = supabaseClient.channel(`room-${room}`)
       .on('broadcast', { event: 'join' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
         if (!roomMatched) {
           roomMatched = true;
           if (statusEl) statusEl.textContent = '合言葉が一致しました。色を選択してください。';
-          
-          // 1. 【追加】開く瞬間に、自分の内部データ選択をリセット
-          myChosenColor = null; 
-
-          // 2. 【追加】開く瞬間に、ボタンの青い色を両方とも強制リセットする
-          const btnBlackInit = document.getElementById('btn-online-black');
-          const btnWhiteInit = document.getElementById('btn-online-white');
-          if (btnBlackInit) btnBlackInit.style.removeProperty('background-color');
-          if (btnWhiteInit) btnWhiteInit.style.removeProperty('background-color');
-
-          // 3. モーダルを表示してボタンを押せるようにする
           if (modal) modal.showModal();
           enableColorButtons(true);
-          
           onlineChannel.send({
             type: 'broadcast',
             event: 'confirm',
@@ -924,20 +897,21 @@
 
     const colors = ids.map((id) => colorChoices[id]);
     const uniqueColors = [...new Set(colors)];
-    // =========================================================================
-    // 【修正後】同じ色が選ばれて重複したときのリセット処理（ここを丸ごと上書き）
-    // =========================================================================
     if (uniqueColors.length === 1) {
       if (statusEl) statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
-      
-      // 1. 自分の内部データ選択をリセット（最初はどちらも選ばれていない状態に戻す）
-      myChosenColor = null; 
 
-      // 2. 画面上のボタンの青色を強制リセットして未選択状態に戻す（!important対策）
+      // 同じ色が選ばれたときは、自分の選択だけを残して再選択を待つ
+      colorChoices = { [clientId]: colorChoices[clientId] };
       const btnBlack = document.getElementById('btn-online-black');
       const btnWhite = document.getElementById('btn-online-white');
-      if (btnBlack) btnBlack.style.removeProperty('background-color');
-      if (btnWhite) btnWhite.style.removeProperty('background-color');
+      if (btnBlack) {
+        btnBlack.style.removeProperty('background-color');
+        btnBlack.classList.remove('btn-selected');
+      }
+      if (btnWhite) {
+        btnWhite.style.removeProperty('background-color');
+        btnWhite.classList.remove('btn-selected');
+      }
 
       enableColorButtons(true);
       return;
