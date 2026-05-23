@@ -236,19 +236,28 @@
 
     const btnClear = document.getElementById('btn-clear-best-scores');
     const btnBack = document.getElementById('btn-back-best-scores');
-    const setupButtonHandler = (button, handler) => {
+    const bindButton = (button, handler) => {
       if (!button) return;
-      const newButton = button.cloneNode(true);
-      button.parentNode.replaceChild(newButton, button);
-      newButton.onclick = handler;
-      newButton.ontouchend = null;
+      let active = false;
+      const run = (event) => {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        if (active) return;
+        active = true;
+        handler();
+        setTimeout(() => { active = false; }, 500);
+      };
+      button.addEventListener('touchend', run, { passive: false });
+      button.addEventListener('click', run);
     };
-    setupButtonHandler(btnClear, () => {
+    bindButton(btnClear, () => {
       const yes = confirm('ベストスコアを全てクリアしますか？');
       if (!yes) return;
       clearBestScores();
     });
-    setupButtonHandler(btnBack, () => {
+    bindButton(btnBack, () => {
       try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
     });
   }
