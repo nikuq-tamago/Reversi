@@ -237,16 +237,20 @@
     const btnClear = document.getElementById('btn-clear-best-scores');
     const btnBack = document.getElementById('btn-back-best-scores');
     if (btnClear) {
-      btnClear.onclick = () => {
+      const handleClearClick = () => {
         const yes = confirm('ベストスコアを全てクリアしますか？');
         if (!yes) return;
         clearBestScores();
       };
+      btnClear.addEventListener('click', handleClearClick);
+      btnClear.addEventListener('touchend', handleClearClick);
     }
     if (btnBack) {
-      btnBack.onclick = () => {
+      const handleBackClick = () => {
         try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
       };
+      btnBack.addEventListener('click', handleBackClick);
+      btnBack.addEventListener('touchend', handleBackClick);
     }
   }
 
@@ -376,7 +380,9 @@
         }
 
         if (isHumanTurn && isValid) {
-          cell.addEventListener("click", () => makeMove(r, c));
+          const handleCellClick = () => makeMove(r, c);
+          cell.addEventListener("click", handleCellClick);
+          cell.addEventListener("touchend", handleCellClick);
         }
 
         boardEl.appendChild(cell);
@@ -818,31 +824,45 @@
   // ボタンイベント: ベストスコア別窓を開く
   const bestScoresBtn = document.getElementById('btn-best-scores');
   if (bestScoresBtn) {
-    bestScoresBtn.addEventListener('click', (e) => {
+    const handleBestScoresClick = (e) => {
       e.preventDefault();
       openBestScoresWindow();
-    });
+    };
+    bestScoresBtn.addEventListener('click', handleBestScoresClick);
+    bestScoresBtn.addEventListener('touchend', handleBestScoresClick);
   }
 
   loadBestScores();
   updateBestScoresTable();
 
-  document.getElementById("btn-restart").addEventListener("click", showSetup);
-  document.getElementById("btn-modal-restart").addEventListener("click", showSetup);
-  document.getElementById("btn-hint").addEventListener("click", toggleHint);
+  const btnRestart = document.getElementById("btn-restart");
+  btnRestart.addEventListener("click", showSetup);
+  btnRestart.addEventListener("touchend", showSetup);
+
+  const btnModalRestart = document.getElementById("btn-modal-restart");
+  btnModalRestart.addEventListener("click", showSetup);
+  btnModalRestart.addEventListener("touchend", showSetup);
+
+  const btnHint = document.getElementById("btn-hint");
+  btnHint.addEventListener("click", toggleHint);
+  btnHint.addEventListener("touchend", toggleHint);
   if (gameoverBannerEl) {
-    gameoverBannerEl.addEventListener("click", () => {
+    const handleGameoverBannerClick = () => {
       if (gameOver && !gameoverModalEl.open) {
         gameoverModalEl.showModal();
       }
-    });
+    };
+    gameoverBannerEl.addEventListener("click", handleGameoverBannerClick);
+    gameoverBannerEl.addEventListener("touchend", handleGameoverBannerClick);
   }
   if (boardWrapEl) {
-    boardWrapEl.addEventListener("click", () => {
+    const handleBoardClick = () => {
       if (gameOver && !gameoverModalEl.open) {
         gameoverModalEl.showModal();
       }
-    });
+    };
+    boardWrapEl.addEventListener("click", handleBoardClick);
+    boardWrapEl.addEventListener("touchend", handleBoardClick);
   }
 
   function toggleHint() {
