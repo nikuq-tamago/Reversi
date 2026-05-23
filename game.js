@@ -5,7 +5,6 @@
   const BLACK = 1;
   const WHITE = 2;
   const SIZE = 8;
-  const MAX_ONLINE_PLAYERS = 2;
 
   const DIRECTIONS = [
     [-1, -1], [-1, 0], [-1, 1],
@@ -19,6 +18,7 @@
   const CPU_DELAY_MS = 600; 
 
   const boardEl = document.getElementById("board");
+  const boardWrapEl = document.querySelector(".board-wrap");
   const gameAreaEl = document.getElementById("game-area");
   const messageEl = document.getElementById("message");
   const countBlackEl = document.getElementById("count-black");
@@ -38,8 +38,10 @@
   const colorHintEl = document.getElementById("color-hint");
   const gameoverModalEl = document.getElementById("modal-gameover");
   const modalBodyEl = document.getElementById("modal-body");
+  const gameoverBannerEl = document.getElementById("gameover-banner");
+  const gameoverHeadlineEl = document.getElementById("gameover-headline");
 
-  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co";
+  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co/rest/v1/";
   const SUPABASE_ANON_KEY = "sb_publishable_SThaSyCH5PIWMr-X5SkeCA_kiYBMz_3";
 
   let board;
@@ -61,8 +63,8 @@
   let clientId = null;
   let colorChoices = {};
   let room = null;
-  let roomMatched = false;
-  let onlineOccupants = new Set();
+  const BEST_SCORE_STORAGE = "reversi_best_scores";
+  let bestScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
   function createBoard() {
     board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
@@ -145,6 +147,120 @@
     return countPiecesOn(board);
   }
 
+  function hideGameoverBanner() {
+    if (!gameoverBannerEl) return;
+    gameoverBannerEl.hidden = true;
+    gameoverBannerEl.classList.remove("is-visible", "gameover-banner--black", "gameover-banner--white", "gameover-banner--draw");
+  }
+
+  function showGameoverBanner(headline, tone) {
+    if (!gameoverBannerEl || !gameoverHeadlineEl) return;
+    gameoverHeadlineEl.textContent = headline;
+    gameoverBannerEl.classList.remove("gameover-banner--black", "gameover-banner--white", "gameover-banner--draw");
+    gameoverBannerEl.classList.add(`gameover-banner--${tone}`);
+    gameoverBannerEl.hidden = false;
+
+    window.requestAnimationFrame(() => {
+      gameoverBannerEl.classList.add("is-visible");
+    });
+  }
+
+  function loadBestScores() {
+    try {
+      const saved = localStorage.getItem(BEST_SCORE_STORAGE);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        for (let level = 1; level <= 5; level++) {
+          if (typeof parsed[level] === "number" && Number.isFinite(parsed[level]) && parsed[level] >= 0) {
+            bestScores[level] = parsed[level];
+          }
+        }
+      }
+    } catch (error) {
+      bestScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    }
+  }
+
+  function saveBestScores() {
+    localStorage.setItem(BEST_SCORE_STORAGE, JSON.stringify(bestScores));
+  }
+
+  function formatBestScore(value) {
+    return value > 0 ? `${value}` : "—";
+  }
+
+  function updateBestScoresTable(containerId = "best-scores-body") {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+
+    const levelsRow = document.createElement("tr");
+    levelsRow.className = "levels-row";
+    const valuesRow = document.createElement("tr");
+    valuesRow.className = "values-row";
+
+    for (let level = 1; level <= 5; level++) {
+      const levelCell = document.createElement("td");
+      levelCell.textContent = `${level}`;
+      levelsRow.appendChild(levelCell);
+
+      const valueCell = document.createElement("td");
+      valueCell.textContent = formatBestScore(bestScores[level]);
+      if (vsCpu && cpuLevel === level && gameOver) {
+        valueCell.classList.add("updated");
+      }
+      valuesRow.appendChild(valueCell);
+    }
+
+    container.appendChild(levelsRow);
+    container.appendChild(valuesRow);
+  }
+
+  function clearBestScores() {
+    for (let i = 1; i <= 5; i++) bestScores[i] = 0;
+    saveBestScores();
+    updateBestScoresTable();
+    // update popup/modal table if present
+    updateBestScoresTable('best-scores-body-popup');
+  }
+
+  function openBestScoresWindow() {
+    const modal = document.getElementById('modal-best-scores');
+    if (!modal) {
+      alert('ベストスコア表示用モーダルが見つかりません。');
+      return;
+    }
+    loadBestScores();
+    updateBestScoresTable('best-scores-body-popup');
+    try { modal.showModal(); } catch(e) { modal.setAttribute('open',''); }
+
+    const btnClear = document.getElementById('btn-clear-best-scores');
+    const btnBack = document.getElementById('btn-back-best-scores');
+    if (btnClear) {
+      btnClear.onclick = () => {
+        const yes = confirm('ベストスコアを全てクリアしますか？');
+        if (!yes) return;
+        clearBestScores();
+      };
+    }
+    if (btnBack) {
+      btnBack.onclick = () => {
+        try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
+      };
+    }
+  }
+
+  function updateBestScoreIfNeeded(points) {
+    if (!vsCpu || !cpuLevel || cpuLevel < 1 || cpuLevel > 5) return false;
+    const level = cpuLevel;
+    if (points > bestScores[level]) {
+      bestScores[level] = points;
+      saveBestScores();
+      return true;
+    }
+    return false;
+  }
+
   function colorName(player) {
     return player === BLACK ? "黒" : "白";
   }
@@ -188,7 +304,7 @@
     labelBlackEl.textContent = `黒${roleFor(BLACK)}`;
     labelWhiteEl.textContent = `白${roleFor(WHITE)}`;
     
-    let modeText = "1人対戦";
+    let modeText = "2人対戦";
     if (vsCpu) {
       modeText = `CPU対戦 (${levelDescription(cpuLevel)})`;
     } else if (networked) {
@@ -581,11 +697,23 @@
 
     const { black, white } = countPieces();
     const result = resultMessage(black, white);
+    const headline = black > white ? "黒の勝ち" : white > black ? "白の勝ち" : "引き分け";
+    const tone = black > white ? "black" : white > black ? "white" : "draw";
+    const humanCount = vsCpu ? (humanColor === BLACK ? black : white) : null;
+    const recordUpdated = vsCpu && humanCount !== null && updateBestScoreIfNeeded(humanCount);
 
     turnTextEl.textContent = "終了";
     messageEl.textContent = result;
-    modalBodyEl.textContent = result;
-    gameoverModalEl.showModal();
+    const scoreText = `${black} 対 ${white}`;
+    modalBodyEl.innerHTML = `
+      <div class="modal-score">${scoreText}</div>
+      ${recordUpdated ? '<div class="best-score-badge">New Record!</div>' : ''}
+    `;
+    // 更新されたベストスコアを読み込み、モーダル内の表を更新
+    loadBestScores();
+    updateBestScoresTable();
+
+    showGameoverBanner(headline, tone);
   }
 
   function startGame(config) {
@@ -616,6 +744,7 @@
     isTransitioning = false; // ✨ ゲーム開始時にフラグをリセット
     messageEl.textContent = "";
 
+    hideGameoverBanner();
     updatePlayerLabels();
     updateHintButtonText(); 
     gameAreaEl.classList.remove("game-area--hidden");
@@ -628,8 +757,6 @@
   function showSetup() {
     gameOver = true;
     cpuThinking = false;
-    closeOnlineModal();
-    resetOnlineSelection();
     if (onlineChannel) {
       onlineChannel.unsubscribe();
       onlineChannel = null;
@@ -638,11 +765,12 @@
     myColor = null;
     opponentColor = null;
     room = null;
-    roomMatched = false;
 
-    enableColorButtons(false);
     gameAreaEl.classList.add("game-area--hidden");
     gameoverModalEl.close();
+    hideGameoverBanner();
+    loadBestScores();
+    updateBestScoresTable();
     setupModalEl.showModal();
   }
 
@@ -687,9 +815,35 @@
     setupLevelInput.addEventListener('input', () => updateCpuLevelLabel(setupLevelInput.value));
   }
 
+  // ボタンイベント: ベストスコア別窓を開く
+  const bestScoresBtn = document.getElementById('btn-best-scores');
+  if (bestScoresBtn) {
+    bestScoresBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openBestScoresWindow();
+    });
+  }
+
+  loadBestScores();
+  updateBestScoresTable();
+
   document.getElementById("btn-restart").addEventListener("click", showSetup);
   document.getElementById("btn-modal-restart").addEventListener("click", showSetup);
   document.getElementById("btn-hint").addEventListener("click", toggleHint);
+  if (gameoverBannerEl) {
+    gameoverBannerEl.addEventListener("click", () => {
+      if (gameOver && !gameoverModalEl.open) {
+        gameoverModalEl.showModal();
+      }
+    });
+  }
+  if (boardWrapEl) {
+    boardWrapEl.addEventListener("click", () => {
+      if (gameOver && !gameoverModalEl.open) {
+        gameoverModalEl.showModal();
+      }
+    });
+  }
 
   function toggleHint() {
     if (gameOver || (vsCpu && currentPlayer === cpuColor)) return;
@@ -709,41 +863,22 @@
     return `c_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
   }
 
-  function enableColorButtons(enabled) {
-    const btnBlack = document.getElementById('btn-online-black');
-    const btnWhite = document.getElementById('btn-online-white');
-    if (btnBlack) {
-      btnBlack.disabled = !enabled;
-      btnBlack.classList.toggle('btn-disabled', !enabled);
-    }
-    if (btnWhite) {
-      btnWhite.disabled = !enabled;
-      btnWhite.classList.toggle('btn-disabled', !enabled);
-    }
-  }
-
   function resetOnlineSelection() {
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
     if (btnBlack) {
       btnBlack.classList.remove('btn-selected');
+      btnBlack.style.removeProperty('background-color');
     }
     if (btnWhite) {
       btnWhite.classList.remove('btn-selected');
+      btnWhite.style.removeProperty('background-color');
     }
   }
 
   function clearOnlineChoiceState(statusEl) {
     colorChoices = {};
     resetOnlineSelection();
-    const btnBlack = document.getElementById('btn-online-black');
-    const btnWhite = document.getElementById('btn-online-white');
-    if (btnBlack) {
-      btnBlack.style.removeProperty('background-color');
-    }
-    if (btnWhite) {
-      btnWhite.style.removeProperty('background-color');
-    }
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
       btnStart.style.display = 'none';
@@ -760,23 +895,6 @@
     }
   }
 
-  function setRoomFullState(statusEl) {
-    if (statusEl) {
-      statusEl.textContent = '部屋が満員です。他の合言葉を試してください。';
-    }
-    enableColorButtons(false);
-    const instructionEl = document.getElementById('online-instruction');
-    if (instructionEl) {
-      instructionEl.style.display = 'none';
-    }
-    const btnStart = document.getElementById('btn-online-game-start');
-    if (btnStart) {
-      btnStart.style.display = 'none';
-      btnStart.disabled = true;
-      btnStart.onclick = null;
-    }
-  }
-
   function broadcastResetSelection() {
     if (onlineChannel) {
       onlineChannel.send({
@@ -784,29 +902,6 @@
         event: 'reset',
         payload: { clientId }
       });
-    }
-  }
-
-  function updateColorButtonState(selectedColor) {
-    const btnBlack = document.getElementById('btn-online-black');
-    const btnWhite = document.getElementById('btn-online-white');
-    
-    // 両方のボタンから btn-selected を削除
-    if (btnBlack) btnBlack.classList.remove('btn-selected');
-    if (btnWhite) btnWhite.classList.remove('btn-selected');
-    
-    // 選択されたボタンに btn-selected を追加
-    if (selectedColor === 'black' && btnBlack) {
-      btnBlack.classList.add('btn-selected');
-    } else if (selectedColor === 'white' && btnWhite) {
-      btnWhite.classList.add('btn-selected');
-    }
-  }
-
-  function closeOnlineModal() {
-    const onlineModal = document.getElementById('modal-online-color');
-    if (onlineModal && onlineModal.open) {
-      onlineModal.close();
     }
   }
 
@@ -820,18 +915,15 @@
     room = passphrase;
     clientId = createClientId();
     colorChoices = {};
-    roomMatched = false;
-    onlineOccupants = new Set([clientId]);
     networked = true;
     myColor = null;
     opponentColor = null;
 
-    resetOnlineSelection();
     messageEl.textContent = '合言葉待機中… ' + room;
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    if (statusEl) statusEl.textContent = '色を選択してください。';
+    if (statusEl) statusEl.textContent = '色を選択してください';
     if (modal) modal.showModal();
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
@@ -851,54 +943,13 @@
     }
 
     onlineChannel = supabaseClient.channel(`room-${room}`)
-      .on('broadcast', { event: 'join' }, ({ payload }) => {
-        if (payload.clientId === clientId) return;
-        if (onlineOccupants.has(payload.clientId)) return;
-        if (onlineOccupants.size >= MAX_ONLINE_PLAYERS) {
-          onlineChannel.send({
-            type: 'broadcast',
-            event: 'full',
-            payload: {
-              targetClientId: payload.clientId,
-              clientId
-            }
-          });
-          return;
-        }
-
-        onlineOccupants.add(payload.clientId);
-        if (!roomMatched) {
-          roomMatched = true;
-          const instructionEl = document.getElementById('online-instruction');
-          if (instructionEl) instructionEl.style.display = 'block';
-          if (statusEl) statusEl.textContent = '色を選択してください。';
-          if (modal) modal.showModal();
-          enableColorButtons(true);
-          onlineChannel.send({
-            type: 'broadcast',
-            event: 'confirm',
-            payload: { clientId }
-          });
-        }
-      })
-      .on('broadcast', { event: 'confirm' }, ({ payload }) => {
-        if (payload.clientId === clientId) return;
-        if (!roomMatched) {
-          roomMatched = true;
-          const instructionEl = document.getElementById('online-instruction');
-          if (instructionEl) instructionEl.style.display = 'block';
-          if (statusEl) statusEl.textContent = '色を選択してください。';
-          if (modal) modal.showModal();
-          enableColorButtons(true);
-        }
-      })
-      .on('broadcast', { event: 'full' }, ({ payload }) => {
-        if (payload.targetClientId !== clientId) return;
-        setRoomFullState(statusEl);
-      })
       .on('broadcast', { event: 'color' }, ({ payload }) => {
         if (payload.clientId === clientId) return;
         colorChoices[payload.clientId] = payload.color;
+        const instructionEl = document.getElementById('online-instruction');
+        if (instructionEl) {
+          instructionEl.style.display = 'block';
+        }
         resolveOnlineColors(hintInit, statusEl, modal);
       })
       .on('broadcast', { event: 'reset' }, ({ payload }) => {
@@ -911,74 +962,15 @@
       });
 
     onlineChannel.subscribe();
-    const broadcastJoin = () => {
-      if (onlineChannel) {
-        onlineChannel.send({
-          type: 'broadcast',
-          event: 'join',
-          payload: { clientId }
-        });
-      }
-    };
-    setTimeout(broadcastJoin, 200);
-    setTimeout(broadcastJoin, 1200);
 
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
-    const btnCancel = document.getElementById('btn-online-cancel');
-    
-   // =========================================================================
-    // 【修正後】オンライン色選択ボタンのイベント登録（ここを丸ごと上書きします）
-    // =========================================================================
-    if (btnBlack) {
-      const newBtnBlack = btnBlack.cloneNode(true);
-      btnBlack.parentNode.replaceChild(newBtnBlack, btnBlack);
-      
-      // 開いた瞬間は背景色を初期化（どちらも選ばれていない状態にする）
-      newBtnBlack.style.removeProperty('background-color');
-
-      newBtnBlack.addEventListener('click', () => {
-        if (!roomMatched) return;
-        
-        // 1. 相手に黒を選択したことを送信
-        sendOnlineColorChoice('black', hintInit, statusEl, modal);
-        
-        // 2. 黒ボタンを青く光らせて、白ボタンの光を消す（!importantを上書き）
-        newBtnBlack.style.setProperty('background-color', '#2563eb', 'important');
-        const wBtn = document.getElementById('btn-online-white');
-        if (wBtn) wBtn.style.removeProperty('background-color');
-      });
-    }
-
-    if (btnWhite) {
-      const newBtnWhite = btnWhite.cloneNode(true);
-      btnWhite.parentNode.replaceChild(newBtnWhite, btnWhite);
-      
-      // 開いた瞬間は背景色を初期化（どちらも選ばれていない状態にする）
-      newBtnWhite.style.removeProperty('background-color');
-
-      newBtnWhite.addEventListener('click', () => {
-        if (!roomMatched) return;
-        
-        // 1. 相手に白を選択したことを送信
-        sendOnlineColorChoice('white', hintInit, statusEl, modal);
-        
-        // 2. 白ボタンを青く光らせて、黒ボタンの光を消す（!importantを上書き）
-        newBtnWhite.style.setProperty('background-color', '#2563eb', 'important');
-        const bBtn = document.getElementById('btn-online-black');
-        if (bBtn) bBtn.style.removeProperty('background-color');
-      });
-    }
-    
-    if (btnCancel) {
-      const newBtnCancel = btnCancel.cloneNode(true);
-      btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
-      newBtnCancel.addEventListener('click', () => {
-        showSetup();
-      });
-    }
-
-    enableColorButtons(false);
+    if (btnBlack) btnBlack.onclick = () => {
+      sendOnlineColorChoice('black', hintInit, statusEl, modal);
+    };
+    if (btnWhite) btnWhite.onclick = () => {
+      sendOnlineColorChoice('white', hintInit, statusEl, modal);
+    };
   }
 
   function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
@@ -991,18 +983,6 @@
     }
     const instructionEl = document.getElementById('online-instruction');
     if (instructionEl) instructionEl.style.display = 'block';
-    const btnBlack = document.getElementById('btn-online-black');
-    const btnWhite = document.getElementById('btn-online-white');
-    if (btnBlack && btnWhite) {
-      btnBlack.classList.remove('btn-selected');
-      btnWhite.classList.remove('btn-selected');
-      if (color === 'black') {
-        btnBlack.classList.add('btn-selected');
-      } else {
-        btnWhite.classList.add('btn-selected');
-      }
-    }
-
     colorChoices[clientId] = color;
     if (statusEl) statusEl.textContent = `あなたは${color === 'black' ? '黒' : '白'}を選択しました。相手の選択を待っています。`;
 
@@ -1016,7 +996,7 @@
   }
 
   function resolveOnlineColors(hintInit, statusEl, modal) {
-    const ids = Object.keys(colorChoices).slice(0, MAX_ONLINE_PLAYERS);
+    const ids = Object.keys(colorChoices);
     if (ids.length < 2) return;
 
     const colors = ids.map((id) => colorChoices[id]);
@@ -1049,7 +1029,6 @@
   }
 
   function handleRemoteMove(payload) {
-    if (!roomMatched) return;
     const row = payload.row;
     const col = payload.col;
     const playerColor = payload.color === 'black' ? BLACK : WHITE;

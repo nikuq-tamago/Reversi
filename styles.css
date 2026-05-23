@@ -135,12 +135,61 @@ body {
    3. リバーシ盤面（スマホの横幅に完全自動追従）
    ========================================================================== */
 .board-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1; /* 縦横比を1:1に固定して綺麗な正方形を保つ */
   background-color: #064e3b; /* 盤面の外枠 */
   padding: 6px;
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.gameover-banner {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120%);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  max-width: 90%;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(31, 41, 55, 0.95);
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.5s ease, opacity 0.5s ease, background-color 0.5s ease, border-color 0.5s ease;
+}
+
+.gameover-banner.is-visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gameover-banner--black {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.96));
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.gameover-banner--white {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(226, 232, 240, 0.95));
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.34);
+}
+
+.gameover-banner--draw {
+  background: rgba(148, 163, 184, 0.9);
+  color: #0f172a;
+  border-color: rgba(226, 232, 240, 0.35);
 }
 
 .board {
@@ -244,11 +293,6 @@ body {
   }
 }
 
-.btn-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* ==========================================================================
    5. メッセージ ＆ 操作ボタン
    ========================================================================== */
@@ -298,17 +342,169 @@ body {
 }
 .btn--secondary:hover { background-color: #334155; }
 
-.btn.btn--secondary.btn-selected,
 .btn-selected {
-  background-color: #2563eb !important;
-  color: #ffffff !important;
-  border: 2px solid #60a5fa !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35) !important;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: 2px solid #60a5fa;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+}
+
+.btn-selected.btn--secondary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn--block {
+  width: 100%;
+  display: block;
 }
 
 /* ==========================================================================
    6. ポップアップ（モーダルダイアログ）設定
    ========================================================================== */
+.best-scores {
+  margin-bottom: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+}
+.best-scores-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.best-scores-header small {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+.best-scores-table-wrapper {
+  overflow-x: hidden;
+}
+.best-scores-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.82rem;
+}
+.best-scores-table td {
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.best-scores-table .levels-row td {
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.best-scores-table .values-row td {
+  color: #f8fafc;
+  font-weight: 700;
+}
+.best-scores-table .values-row td.updated {
+  color: #4ade80;
+}
+.best-scores-table tbody tr:hover td {
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.gameover-headline {
+  display: inline-block;
+  margin: 0 auto 10px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  white-space: nowrap;
+  opacity: 0;
+  animation-duration: 0.8s;
+  animation-fill-mode: forwards;
+}
+.gameover-headline--black {
+  background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+  border: 1px solid #9ca3af;
+  animation-name: slideInFromLeft;
+}
+.gameover-headline--white {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  animation-name: slideInFromRight;
+}
+.gameover-headline--draw {
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  animation-name: slideInFromBottom;
+}
+.gameover-subtext {
+  margin-bottom: 14px;
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+.best-score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(-100%) rotate(-4deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(12%) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(100%) rotate(4deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-12%) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromBottom {
+  0% {
+    transform: translateY(40%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .modal {
   border: none;
   position: fixed;

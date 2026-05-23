@@ -63,6 +63,9 @@
       </section>
 
       <div class="board-wrap">
+        <button type="button" id="gameover-banner" class="gameover-banner" hidden aria-live="polite" aria-label="対局終了">
+          <span id="gameover-headline">勝敗</span>
+        </button>
         <div class="board" id="board" role="grid" aria-label="オセロ盤面"></div>
       </div>
 
@@ -89,7 +92,8 @@
 
   <dialog class="modal" id="modal-setup" open>
     <div class="modal-content" style="background: #1e293b; color: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid #475569;">
-      <h2 style="font-size: 1.4rem; color: #4ade80; margin-bottom: 20px; text-align: center; font-weight: 800;">ゲーム設定</h2>
+      <h2 style="font-size: 1.4rem; color: #4ade80; margin-bottom: 16px; text-align: center; font-weight: 800;">ゲーム設定</h2>
+      <!-- best scores moved to gameover modal -->
       <form id="setup-form">
         
         <div style="margin-bottom: 20px;">
@@ -99,7 +103,7 @@
               <input type="radio" name="mode" value="cpu" checked style="cursor: pointer;"> CPU戦
             </label>
             <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: #334155; padding: 12px; border-radius: 8px; cursor: pointer;">
-              <input type="radio" name="mode" value="pvp" style="cursor: pointer;"> 1人対戦
+              <input type="radio" name="mode" value="pvp" style="cursor: pointer;"> 2人対戦
             </label>
             <label style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: #334155; padding: 12px; border-radius: 8px; cursor: pointer;">
               <input type="radio" name="mode" value="online" style="cursor: pointer;"> ネット対戦
@@ -113,7 +117,9 @@
             <input id="setup-level" type="range" name="level" min="1" max="5" step="1" value="3" style="flex: 1; cursor: pointer;">
             <span id="setup-level-label" style="min-width: 96px; text-align: center; font-size: 0.9rem; color: #f8fafc;">普通</span>
           </div>
-          <p style="font-size:0.75rem; color:#64748b; margin-top:8px;">1が最も簡単、5が最も難しいです。</p>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <button type="button" id="btn-best-scores" class="btn btn--secondary" style="padding:6px 10px; font-size:0.8rem;">ベストスコア</button>
+          </div>
         </div>
 
         <div style="margin-bottom: 20px;">
@@ -155,6 +161,16 @@
       <h2 style="font-size: 1.5rem; color: #facc15; margin-bottom: 12px; font-weight: 800;">対局終了</h2>
       <div id="modal-body" style="font-size: 1.1rem; font-weight: bold; margin-bottom: 20px;"></div>
       
+      <!-- ベストスコア表（2行 x 5列） -->
+      <div class="best-scores-table-wrapper" style="margin-bottom:12px;">
+        <table class="best-scores-table">
+          <tbody id="best-scores-body">
+            <tr class="levels-row"></tr>
+            <tr class="values-row"></tr>
+          </tbody>
+        </table>
+      </div>
+
       <div class="ad-slot" style="margin-bottom: 20px;" aria-label="広告">
 
 
@@ -171,9 +187,27 @@
     </div>
   </dialog>
 
+  <dialog class="modal" id="modal-best-scores">
+    <div class="modal-content" style="background: #1e293b; color: #f8fafc; padding: 18px; border-radius: 14px; border: 1px solid #475569; text-align: center;">
+      <h2 style="font-size: 1.2rem; color: #4ade80; margin-bottom: 10px; font-weight: 800;">ベストスコア</h2>
+      <div style="margin-bottom:12px;">
+        <table class="best-scores-table" style="max-width:100%; margin:0 auto;">
+          <tbody id="best-scores-body-popup">
+            <tr class="levels-row"></tr>
+            <tr class="values-row"></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button type="button" id="btn-clear-best-scores" class="btn btn--secondary">クリア</button>
+        <button type="button" id="btn-back-best-scores" class="btn btn--primary">戻る</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="modal" id="modal-online-color">
     <div class="modal-content" style="background: #0f172a; color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #334155; text-align:center;">
-      <p id="online-status" style="color:#94a3b8; margin-bottom:12px;">待機画面</p>
+      <p id="online-status" style="color:#94a3b8; margin-bottom:12px;">相手を待っています...</p>
       <div style="display:flex; gap:10px; justify-content:center; margin-bottom:12px;">
         <button id="btn-online-black" class="btn btn--secondary">黒を選ぶ（先手）</button>
         <button id="btn-online-white" class="btn btn--secondary">白を選ぶ（後手）</button>
