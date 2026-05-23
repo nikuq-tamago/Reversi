@@ -237,20 +237,16 @@
     const btnClear = document.getElementById('btn-clear-best-scores');
     const btnBack = document.getElementById('btn-back-best-scores');
     if (btnClear) {
-      const handleClearClick = () => {
+      btnClear.onclick = () => {
         const yes = confirm('ベストスコアを全てクリアしますか？');
         if (!yes) return;
         clearBestScores();
       };
-      btnClear.addEventListener('click', handleClearClick);
-      btnClear.addEventListener('touchend', handleClearClick);
     }
     if (btnBack) {
-      const handleBackClick = () => {
+      btnBack.onclick = () => {
         try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
       };
-      btnBack.addEventListener('click', handleBackClick);
-      btnBack.addEventListener('touchend', handleBackClick);
     }
   }
 
