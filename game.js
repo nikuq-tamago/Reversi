@@ -236,18 +236,21 @@
 
     const btnClear = document.getElementById('btn-clear-best-scores');
     const btnBack = document.getElementById('btn-back-best-scores');
-    if (btnClear) {
-      btnClear.onclick = () => {
-        const yes = confirm('ベストスコアを全てクリアしますか？');
-        if (!yes) return;
-        clearBestScores();
-      };
-    }
-    if (btnBack) {
-      btnBack.onclick = () => {
-        try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
-      };
-    }
+    const setupButtonHandler = (button, handler) => {
+      if (!button) return;
+      const newButton = button.cloneNode(true);
+      button.parentNode.replaceChild(newButton, button);
+      newButton.onclick = handler;
+      newButton.ontouchend = null;
+    };
+    setupButtonHandler(btnClear, () => {
+      const yes = confirm('ベストスコアを全てクリアしますか？');
+      if (!yes) return;
+      clearBestScores();
+    });
+    setupButtonHandler(btnBack, () => {
+      try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
+    });
   }
 
   function updateBestScoreIfNeeded(points) {
