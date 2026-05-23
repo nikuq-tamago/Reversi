@@ -772,8 +772,15 @@
     opponentColor = null;
     room = null;
 
+    const onlineModalEl = document.getElementById('modal-online-color');
+    if (onlineModalEl && onlineModalEl.open) {
+      onlineModalEl.close();
+    }
+
     gameAreaEl.classList.add("game-area--hidden");
-    gameoverModalEl.close();
+    if (gameoverModalEl && gameoverModalEl.open) {
+      gameoverModalEl.close();
+    }
     hideGameoverBanner();
     loadBestScores();
     updateBestScoresTable();
