@@ -41,7 +41,7 @@
   const gameoverBannerEl = document.getElementById("gameover-banner");
   const gameoverHeadlineEl = document.getElementById("gameover-headline");
 
-  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co/rest/v1/";
+  const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_SThaSyCH5PIWMr-X5SkeCA_kiYBMz_3";
 
   let board;
@@ -961,7 +961,9 @@
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
-    if (statusEl) statusEl.textContent = '色を選択してください';
+    if (statusEl) {
+      statusEl.textContent = 'Supabase に接続中…';
+    }
     if (modal) modal.showModal();
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
@@ -999,7 +1001,17 @@
         handleRemoteMove(payload);
       });
 
-    onlineChannel.subscribe();
+    try {
+      onlineChannel.subscribe();
+      if (statusEl) {
+        statusEl.textContent = '合言葉待機中… 相手の参加を待っています。';
+      }
+    } catch (error) {
+      console.error('オンライン接続エラー', error);
+      if (statusEl) {
+        statusEl.textContent = 'オンライン接続に失敗しました。ページを再読込してください。';
+      }
+    }
 
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
