@@ -835,6 +835,17 @@
   loadBestScores();
   updateBestScoresTable();
 
+  const btnOnlineCancel = document.getElementById('btn-online-cancel');
+  if (btnOnlineCancel) {
+    const handleOnlineCancel = (e) => {
+      e.preventDefault();
+      showSetup();
+    };
+    btnOnlineCancel.addEventListener('click', handleOnlineCancel);
+    btnOnlineCancel.addEventListener('touchend', handleOnlineCancel);
+    btnOnlineCancel.disabled = false;
+  }
+
   const btnRestart = document.getElementById("btn-restart");
   btnRestart.addEventListener("click", showSetup);
   btnRestart.addEventListener("touchend", showSetup);
