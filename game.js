@@ -365,7 +365,7 @@
       if (currentPlayer === humanColor) return "あなたの番";
       const ch = getCharacter(cpuLevel);
       const name = ch?.name || "CPU";
-      return `${name}が思考中…`;
+      return `${name}の番`;
     }
     if (networked) {
       return currentPlayer === myColor ? "あなたの番" : "相手の番";
