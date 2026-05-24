@@ -41,6 +41,12 @@
   const gameoverBannerEl = document.getElementById("gameover-banner");
   const gameoverHeadlineEl = document.getElementById("gameover-headline");
 
+  const charZoneEl = document.getElementById("char-zone");
+  const charAvatarEl = document.getElementById("char-avatar");
+  const charNameEl = document.getElementById("char-name");
+  const charTitleEl = document.getElementById("char-title");
+  const charLineEl = document.getElementById("char-line");
+
   const SUPABASE_URL = "https://iclfzueezuwsfoxibmww.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_SThaSyCH5PIWMr-X5SkeCA_kiYBMz_3";
 
@@ -48,13 +54,14 @@
   let currentPlayer;
   let validMoves;
   let gameOver;
-  let hintVisible;
+  let hintVisible = false; 
+  let speechEnabled = true;
   let vsCpu;
   let cpuLevel; 
   let humanColor;
   let cpuColor;
   let cpuThinking;
-  let isTransitioning = false; // ✨ ターン移行中の連打を禁止する絶対ロックフラグ
+  let isTransitioning = false; 
   let myColor = null;
   let opponentColor = null;
   let networked = false;
@@ -65,6 +72,28 @@
   let room = null;
   const BEST_SCORE_STORAGE = "reversi_best_scores";
   let bestScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+  let CPU_CHARACTERS = {};
+
+  async function loadCharacters() {
+    try {
+      const res = await fetch("characters.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error("failed to load characters.json");
+      CPU_CHARACTERS = await res.json();
+    } catch (e) {
+      console.error("キャラクター情報の読み込みに失敗しました", e);
+      CPU_CHARACTERS = {};
+    }
+  }
+
+  function getCharacter(level) {
+    return CPU_CHARACTERS[String(level)] || null;
+  }
+
+  function randomFrom(list) {
+    if (!Array.isArray(list) || list.length === 0) return "";
+    return list[Math.floor(Math.random() * list.length)];
+  }
 
   function createBoard() {
     board = Array.from({ length: SIZE }, () => Array(SIZE).fill(EMPTY));
@@ -144,6 +173,7 @@
   }
 
   function countPieces() {
+    if (!board) return { black: 2, white: 2 };
     return countPiecesOn(board);
   }
 
@@ -181,6 +211,12 @@
     }
   }
 
+  function toggleHint() {
+    hintVisible = !hintVisible;
+    updateHintButtonText();
+    renderBoard();
+  }
+
   function saveBestScores() {
     localStorage.setItem(BEST_SCORE_STORAGE, JSON.stringify(bestScores));
   }
@@ -194,72 +230,63 @@
     if (!container) return;
     container.innerHTML = "";
 
-    const levelsRow = document.createElement("tr");
-    levelsRow.className = "levels-row";
-    const valuesRow = document.createElement("tr");
-    valuesRow.className = "values-row";
+    const tr = document.createElement("tr");
 
     for (let level = 1; level <= 5; level++) {
-      const levelCell = document.createElement("td");
-      levelCell.textContent = `${level}`;
-      levelsRow.appendChild(levelCell);
-
-      const valueCell = document.createElement("td");
-      valueCell.textContent = formatBestScore(bestScores[level]);
+      const td = document.createElement("td");
+      td.textContent = formatBestScore(bestScores[level]);
+      
       if (vsCpu && cpuLevel === level && gameOver) {
-        valueCell.classList.add("updated");
+        td.classList.add("updated");
       }
-      valuesRow.appendChild(valueCell);
+      tr.appendChild(td);
     }
 
-    container.appendChild(levelsRow);
-    container.appendChild(valuesRow);
+    container.appendChild(tr);
   }
 
   function clearBestScores() {
     for (let i = 1; i <= 5; i++) bestScores[i] = 0;
     saveBestScores();
-    updateBestScoresTable();
-    // update popup/modal table if present
+    updateBestScoresTable('best-scores-body');
     updateBestScoresTable('best-scores-body-popup');
   }
 
   function openBestScoresWindow() {
     const modal = document.getElementById('modal-best-scores');
-    if (!modal) {
-      alert('ベストスコア表示用モーダルが見つかりません。');
-      return;
-    }
+    if (!modal) return;
     loadBestScores();
     updateBestScoresTable('best-scores-body-popup');
-    try { modal.showModal(); } catch(e) { modal.setAttribute('open',''); }
+    try { modal.showModal(); } catch(e) { modal.setAttribute('open', ''); }
 
     const btnClear = document.getElementById('btn-clear-best-scores');
     const btnBack = document.getElementById('btn-back-best-scores');
-    const bindButton = (button, handler) => {
-      if (!button) return;
-      let active = false;
-      const run = (event) => {
-        if (event) {
-          event.preventDefault();
-          event.stopPropagation();
+    
+    if (btnClear) {
+      const newClear = btnClear.cloneNode(true);
+      btnClear.parentNode.replaceChild(newClear, btnClear);
+      
+      const runClear = (e) => {
+        e.preventDefault();
+        if (confirm('ベストスコアを全てクリアしますか？')) {
+          clearBestScores();
         }
-        if (active) return;
-        active = true;
-        handler();
-        setTimeout(() => { active = false; }, 500);
       };
-      button.addEventListener('touchend', run, { passive: false });
-      button.addEventListener('click', run);
-    };
-    bindButton(btnClear, () => {
-      const yes = confirm('ベストスコアを全てクリアしますか？');
-      if (!yes) return;
-      clearBestScores();
-    });
-    bindButton(btnBack, () => {
-      try { modal.close(); } catch(e) { modal.removeAttribute('open'); }
-    });
+      newClear.addEventListener('touchend', runClear, { passive: false });
+      newClear.addEventListener('click', runClear);
+    }
+
+    if (btnBack) {
+      const newBack = btnBack.cloneNode(true);
+      btnBack.parentNode.replaceChild(newBack, btnBack);
+      
+      const runBack = (e) => {
+        e.preventDefault();
+        try { modal.close(); } catch(err) { modal.removeAttribute('open'); }
+      };
+      newBack.addEventListener('touchend', runBack, { passive: false });
+      newBack.addEventListener('click', runBack);
+    }
   }
 
   function updateBestScoreIfNeeded(points) {
@@ -278,25 +305,28 @@
   }
 
   function levelName(level) {
-    if (level === 1) return "（とても弱いCPU）";
-    if (level === 2) return "（弱いCPU）";
-    if (level === 3) return "（普通CPU）";
-    if (level === 4) return "（強いCPU）";
-    return "（とても強いCPU）";
+    const ch = getCharacter(level);
+    if (!ch) return `（Lv${level}:CPU）`;
+    return `（Lv${level}:${ch.name}）`;
   }
 
   function levelDescription(level) {
-    if (level === 1) return "とても弱い";
-    if (level === 2) return "弱い";
-    if (level === 3) return "普通";
-    if (level === 4) return "強い";
-    return "とても強い";
+    const lvl = parseInt(level, 10);
+    const ch = getCharacter(lvl);
+    if (!ch) {
+      if (lvl === 1) return "Lv1:初心者";
+      if (lvl === 2) return "Lv2:中級";
+      if (lvl === 3) return "Lv3:上級";
+      if (lvl === 4) return "Lv4:達人";
+      return "Lv5:CPU";
+    }
+    return `Lv${lvl}:${ch.title}`;
   }
 
   function updateCpuLevelLabel(level) {
     const labelEl = document.getElementById('setup-level-label');
     if (labelEl) {
-      labelEl.textContent = levelDescription(parseInt(level, 10));
+      labelEl.textContent = levelDescription(level);
     }
   }
 
@@ -313,31 +343,34 @@
   }
 
   function updatePlayerLabels() {
-    labelBlackEl.textContent = `黒${roleFor(BLACK)}`;
-    labelWhiteEl.textContent = `白${roleFor(WHITE)}`;
+    if (labelBlackEl) labelBlackEl.textContent = `黒${roleFor(BLACK)}`;
+    if (labelWhiteEl) labelWhiteEl.textContent = `白${roleFor(WHITE)}`;
     
-    let modeText = "2人対戦";
+    let modeText = "CPU対戦";
     if (vsCpu) {
-      modeText = `CPU対戦 (${levelDescription(cpuLevel)})`;
+      const ch = getCharacter(cpuLevel);
+      modeText = `CPU対戦 (${ch?.name || ""})`;
     } else if (networked) {
       modeText = "オンライン対戦";
     }
-    subtitleEl.textContent = `${modeText} — 黒が先手`;
+    if (subtitleEl) subtitleEl.textContent = `${modeText} — 黒が先手`;
 
-    cardBlackEl.classList.toggle("is-you", (vsCpu && humanColor === BLACK) || (networked && myColor === BLACK));
-    cardWhiteEl.classList.toggle("is-you", (vsCpu && humanColor === WHITE) || (networked && myColor === WHITE));
+    if (cardBlackEl) cardBlackEl.classList.toggle("is-you", (vsCpu && humanColor === BLACK) || (networked && myColor === BLACK));
+    if (cardWhiteEl) cardWhiteEl.classList.toggle("is-you", (vsCpu && humanColor === WHITE) || (networked && myColor === WHITE));
   }
 
   function turnLabel() {
     if (gameOver) return "終了";
     if (vsCpu) {
       if (currentPlayer === humanColor) return "あなたの番";
-      return "CPUの手番…";
+      const ch = getCharacter(cpuLevel);
+      const name = ch?.name || "CPU";
+      return `${name}が思考中…`;
     }
     if (networked) {
       return currentPlayer === myColor ? "あなたの番" : "相手の番";
     }
-    return `${colorName(currentPlayer)}の番`;
+    return "";
   }
 
   function isCpuTurn() {
@@ -346,19 +379,65 @@
 
   function updateScoreboard() {
     const { black, white } = countPieces();
-    countBlackEl.textContent = black;
-    countWhiteEl.textContent = white;
+    if (countBlackEl) countBlackEl.textContent = black;
+    if (countWhiteEl) countWhiteEl.textContent = white;
 
-    cardBlackEl.classList.toggle("active", !gameOver && currentPlayer === BLACK);
-    cardWhiteEl.classList.toggle("active", !gameOver && currentPlayer === WHITE);
+    if (cardBlackEl) cardBlackEl.classList.toggle("active", !gameOver && currentPlayer === BLACK);
+    if (cardWhiteEl) cardWhiteEl.classList.toggle("active", !gameOver && currentPlayer === WHITE);
 
-    turnTextEl.textContent = turnLabel();
-    turnDiscEl.className = `turn-disc disc--${currentPlayer === BLACK ? "black" : "white"}`;
+    if (turnTextEl) turnTextEl.textContent = turnLabel();
+    if (turnDiscEl) turnDiscEl.className = `turn-disc disc--${currentPlayer === BLACK ? "black" : "white"}`;
+  }
+
+  function updateCharacterSpeech(type, context = {}) {
+    if (!speechEnabled || !vsCpu || !charZoneEl) {
+      if (charZoneEl) charZoneEl.classList.add("char-zone--hidden");
+      return;
+    }
+
+    const ch = getCharacter(cpuLevel);
+    if (!ch) return;
+
+    if (charAvatarEl && charAvatarEl.tagName === "IMG") {
+      if (ch.avatarUrl) {
+        charAvatarEl.src = ch.avatarUrl;
+        charAvatarEl.alt = ch.name || "キャラクター";
+      }
+    }
+
+    if (charNameEl) charNameEl.textContent = ch.name || "";
+    if (charTitleEl) charTitleEl.textContent = ch.title || "";
+
+    const lines = ch.lines || {};
+    let line = "";
+
+    if (type === "start") {
+      line = randomFrom(lines.start);
+    } else if (type === "win") {
+      const margin = context.margin ?? 0;
+      const big = Math.abs(margin) >= 10;
+      line = big ? randomFrom(lines.win_big) : randomFrom(lines.win_close);
+    } else if (type === "lose") {
+      const margin = context.margin ?? 0;
+      const big = Math.abs(margin) >= 10;
+      line = big ? randomFrom(lines.lose_big) : randomFrom(lines.lose_close);
+    } else if (type === "draw") {
+      line = randomFrom(lines.draw);
+    }
+
+    if (charLineEl && line) {
+      charLineEl.textContent = `「${line}」`;
+    }
+
+    charZoneEl.classList.remove("char-zone--hidden");
   }
 
   function renderBoard(animateFlips) {
+    if (!boardEl) return;
     boardEl.innerHTML = "";
     
+    if (!board) createBoard(); 
+
     const isHumanTurn = !gameOver && ((vsCpu && currentPlayer === humanColor) || (networked && currentPlayer === myColor) || (!vsCpu && !networked));
 
     for (let r = 0; r < SIZE; r++) {
@@ -370,7 +449,7 @@
         cell.setAttribute("aria-label", `マス ${r + 1}行 ${c + 1}列`);
 
         const key = `${r},${c}`;
-        const isValid = validMoves.has(key);
+        const isValid = validMoves ? validMoves.has(key) : false;
 
         if (isValid && !gameOver && isHumanTurn && hintVisible) {
           cell.classList.add("valid");
@@ -572,12 +651,10 @@
 
   function makeMove(row, col) {
     const key = `${row},${col}`;
-    const flips = validMoves.get(key);
+    const flips = validMoves ? validMoves.get(key) : null;
     
-    // ⚡ 絶対ロック：ゲーム終了、CPU番、またはターン切り替えアニメーション中なら即拒否
     if (!flips || gameOver || isCpuTurn() || isTransitioning) return;
 
-    // クリックされた瞬間にロックを有効化
     isTransitioning = true;
     validMoves = new Map();
 
@@ -588,7 +665,7 @@
       flippedKeys.add(`${fr},${fc}`);
     }
 
-    messageEl.textContent = "";
+    if (messageEl) messageEl.textContent = "";
 
     if (networked && currentPlayer !== myColor) {
       isTransitioning = false;
@@ -596,16 +673,20 @@
     }
 
     if (networked && onlineChannel) {
-      onlineChannel.send({
-        type: 'broadcast',
-        event: 'move',
-        payload: {
-          clientId,
-          row,
-          col,
-          color: currentPlayer === BLACK ? 'black' : 'white'
-        }
-      });
+      try {
+        onlineChannel.send({
+          type: 'broadcast',
+          event: 'move',
+          payload: {
+            clientId,
+            row,
+            col,
+            color: currentPlayer === BLACK ? 'black' : 'white'
+          }
+        });
+      } catch (e) {
+        console.error("Failed to broadcast move:", e);
+      }
     }
 
     endTurn(flippedKeys);
@@ -616,15 +697,18 @@
       return `${colorName(passedPlayer)}は置けないためパス。${colorName(currentPlayer)}の番です`;
     }
     if (passedPlayer === cpuColor) {
-      return "CPUは置けないためパス。あなたの番です";
+      const ch = getCharacter(cpuLevel);
+      const name = ch?.name || "CPU";
+      return `${name}は置けないためパス。あなたの番です`;
     }
     return "あなたは置けないためパス。CPUの番です";
   }
 
   function updateHintButtonText() {
-    document.getElementById("btn-hint").textContent = hintVisible
-      ? "ヒントを隠す"
-      : "置ける場所を表示";
+    const btnHint = document.getElementById("btn-hint");
+    if (btnHint) {
+      btnHint.textContent = hintVisible ? "ヒントを隠す" : "置ける場所を表示";
+    }
   }
 
   function endTurn(animateFlips) {
@@ -642,9 +726,7 @@
         renderBoard(); 
         updateScoreboard();
         
-        // 次の手番の準備が完了したのでロック解除
         isTransitioning = false; 
-        
         scheduleCpuTurn();
         return;
       }
@@ -653,7 +735,7 @@
       if (passMoves.size > 0) {
         currentPlayer = next; 
         validMoves = new Map(); 
-        messageEl.textContent = passMessage(next);
+        if (messageEl) messageEl.textContent = passMessage(next);
         
         renderBoard();
         updateScoreboard();
@@ -665,20 +747,17 @@
           }
           currentPlayer = opponent(next); 
           validMoves = passMoves;          
-          messageEl.textContent = "";     
+          if (messageEl) messageEl.textContent = "";     
           renderBoard();
           updateScoreboard();
           
-          // パスを挟んだ後の手番の準備が完了したのでロック解除
           isTransitioning = false; 
-          
           scheduleCpuTurn(); 
         }, 1500);
         
         return;
       }
 
-      // ゲーム終了時もロック解除
       isTransitioning = false; 
       finishGame();
     }, 400); 
@@ -697,7 +776,9 @@
       return `あなたの勝ち！（${humanCount} 対 ${cpuCount}）`;
     }
     if (humanCount < cpuCount) {
-      return `CPUの勝ち！（${humanCount} 対 ${cpuCount}）`;
+      const ch = getCharacter(cpuLevel);
+      const name = ch?.name || "CPU";
+      return `${name}の勝ち！（${humanCount} 対 ${cpuCount}）`;
     }
     return `引き分け！（${humanCount} 対 ${cpuCount}）`;
   }
@@ -713,19 +794,31 @@
     const result = resultMessage(black, white);
     const headline = black > white ? "黒の勝ち" : white > black ? "白の勝ち" : "引き分け";
     const tone = black > white ? "black" : white > black ? "white" : "draw";
+    
     const humanCount = vsCpu ? (humanColor === BLACK ? black : white) : null;
+    const cpuCount = vsCpu ? (humanColor === BLACK ? white : black) : null;
     const recordUpdated = vsCpu && humanCount !== null && updateBestScoreIfNeeded(humanCount);
 
-    turnTextEl.textContent = "終了";
-    messageEl.textContent = result;
+    if (vsCpu && humanCount !== null && cpuCount !== null) {
+      const margin = humanCount - cpuCount;
+      if (humanCount > cpuCount) updateCharacterSpeech("win", { margin });
+      else if (humanCount < cpuCount) updateCharacterSpeech("lose", { margin });
+      else updateCharacterSpeech("draw");
+    }
+
+    if (turnTextEl) turnTextEl.textContent = "終了";
+    if (messageEl) messageEl.textContent = result;
     const scoreText = `${black} 対 ${white}`;
-    modalBodyEl.innerHTML = `
-      <div class="modal-score">${scoreText}</div>
-      ${recordUpdated ? '<div class="best-score-badge">New Record!</div>' : ''}
-    `;
-    // 更新されたベストスコアを読み込み、モーダル内の表を更新
+    if (modalBodyEl) {
+      modalBodyEl.innerHTML = `
+        <div class="modal-score">${scoreText}</div>
+        ${recordUpdated ? '<div class="best-score-badge">New Record!</div>' : ''}
+      `;
+    }
+    
     loadBestScores();
-    updateBestScoresTable();
+    updateBestScoresTable('best-scores-body');
+    updateBestScoresTable('best-scores-body-popup');
 
     showGameoverBanner(headline, tone);
   }
@@ -754,15 +847,25 @@
     validMoves = computeValidMovesOn(board, BLACK);
     gameOver = false;
     hintVisible = config.hintInit; 
+    speechEnabled = config.speechEnabled;
     cpuThinking = false;
-    isTransitioning = false; // ✨ ゲーム開始時にフラグをリセット
-    messageEl.textContent = "";
+    isTransitioning = false;
+    if (messageEl) messageEl.textContent = "";
 
     hideGameoverBanner();
     updatePlayerLabels();
     updateHintButtonText(); 
-    gameAreaEl.classList.remove("game-area--hidden");
-    setupModalEl.close(); 
+    
+    updateCharacterSpeech("start");
+
+    if (gameAreaEl) {
+      gameAreaEl.classList.remove("game-area--hidden");
+      gameAreaEl.style.display = "block";
+    }
+
+    if (setupModalEl) {
+      try { setupModalEl.close(); } catch(e){}
+    } 
     renderBoard();
     updateScoreboard();
     scheduleCpuTurn();
@@ -772,7 +875,7 @@
     gameOver = true;
     cpuThinking = false;
     if (onlineChannel) {
-      onlineChannel.unsubscribe();
+      try { onlineChannel.unsubscribe(); } catch(e){}
       onlineChannel = null;
     }
     networked = false;
@@ -782,20 +885,26 @@
 
     const onlineModalEl = document.getElementById('modal-online-color');
     if (onlineModalEl && onlineModalEl.open) {
-      onlineModalEl.close();
+      try { onlineModalEl.close(); } catch(e){}
     }
 
-    gameAreaEl.classList.add("game-area--hidden");
+    if (charZoneEl) charZoneEl.classList.add("char-zone--hidden");
+
+    if (gameAreaEl) gameAreaEl.classList.add("game-area--hidden");
+
     if (gameoverModalEl && gameoverModalEl.open) {
-      gameoverModalEl.close();
+      try { gameoverModalEl.close(); } catch(e){}
     }
     hideGameoverBanner();
     loadBestScores();
-    updateBestScoresTable();
-    setupModalEl.showModal();
+    updateBestScoresTable('best-scores-body');
+    if (setupModalEl) {
+      try { setupModalEl.showModal(); } catch(e){}
+    }
   }
 
   function readSetupConfig() {
+    if (!setupFormEl) return { mode: "cpu", level: "3", color: "black", hintInit: false, speechEnabled: true, passphrase: "" };
     const modeEl = setupFormEl.querySelector('input[name="mode"]:checked');
     const colorEl = setupFormEl.querySelector('input[name="color"]:checked');
     const levelEl = document.getElementById('setup-level');
@@ -807,6 +916,9 @@
     const hintCheckbox = document.getElementById("setup-hint");
     const hintVal = hintCheckbox ? hintCheckbox.checked : false;
 
+    const speechCheckbox = document.getElementById("setup-speech");
+    const speechVal = speechCheckbox ? speechCheckbox.checked : true;
+
     const pass = passphraseInput ? passphraseInput.value.trim() : "";
 
     return {
@@ -814,94 +926,36 @@
       level: levelVal,
       color: colorVal,
       hintInit: hintVal,
+      speechEnabled: speechVal,
       passphrase: pass
     };
   }
 
-  setupFormEl.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const cfg = readSetupConfig();
-    if (cfg.mode === "online") {
-      startOnlineGame(cfg.passphrase, cfg.hintInit);
-    } else {
-      startGame(cfg);
-    }
-  });
-
-  setupFormEl.querySelectorAll('input[name="mode"]').forEach((input) => {
-    input.addEventListener("change", updateSetupLabels);
-  });
-  const setupLevelInput = document.getElementById('setup-level');
-  if (setupLevelInput) {
-    setupLevelInput.addEventListener('input', () => updateCpuLevelLabel(setupLevelInput.value));
-  }
-
-  // ボタンイベント: ベストスコア別窓を開く
-  const bestScoresBtn = document.getElementById('btn-best-scores');
-  if (bestScoresBtn) {
-    const handleBestScoresClick = (e) => {
+  if (setupFormEl) {
+    setupFormEl.addEventListener("submit", (e) => {
       e.preventDefault();
-      openBestScoresWindow();
-    };
-    bestScoresBtn.addEventListener('click', handleBestScoresClick);
-    bestScoresBtn.addEventListener('touchend', handleBestScoresClick);
-  }
-
-  loadBestScores();
-  updateBestScoresTable();
-
-  const btnOnlineCancel = document.getElementById('btn-online-cancel');
-  if (btnOnlineCancel) {
-    const handleOnlineCancel = (e) => {
-      e.preventDefault();
-      showSetup();
-    };
-    btnOnlineCancel.addEventListener('click', handleOnlineCancel);
-    btnOnlineCancel.addEventListener('touchend', handleOnlineCancel);
-    btnOnlineCancel.disabled = false;
-  }
-
-  const btnRestart = document.getElementById("btn-restart");
-  btnRestart.addEventListener("click", showSetup);
-  btnRestart.addEventListener("touchend", showSetup);
-
-  const btnModalRestart = document.getElementById("btn-modal-restart");
-  btnModalRestart.addEventListener("click", showSetup);
-  btnModalRestart.addEventListener("touchend", showSetup);
-
-  const btnHint = document.getElementById("btn-hint");
-  btnHint.addEventListener("click", toggleHint);
-  btnHint.addEventListener("touchend", toggleHint);
-  if (gameoverBannerEl) {
-    const handleGameoverBannerClick = () => {
-      if (gameOver && !gameoverModalEl.open) {
-        gameoverModalEl.showModal();
+      const cfg = readSetupConfig();
+      if (cfg.mode === "online") {
+        startOnlineGame(cfg.passphrase, cfg.hintInit, cfg.speechEnabled);
+      } else {
+        startGame(cfg);
       }
-    };
-    gameoverBannerEl.addEventListener("click", handleGameoverBannerClick);
-    gameoverBannerEl.addEventListener("touchend", handleGameoverBannerClick);
-  }
-  if (boardWrapEl) {
-    const handleBoardClick = () => {
-      if (gameOver && !gameoverModalEl.open) {
-        gameoverModalEl.showModal();
-      }
-    };
-    boardWrapEl.addEventListener("click", handleBoardClick);
-    boardWrapEl.addEventListener("touchend", handleBoardClick);
+    });
   }
 
-  function toggleHint() {
-    if (gameOver || (vsCpu && currentPlayer === cpuColor)) return;
-    hintVisible = !hintVisible;
-    renderBoard();
-    updateHintButtonText();
-  }
-
-  // --- ネット対戦関連 ---
   function setupSupabaseClient() {
-    if (!supabaseClient) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    try {
+      if (!supabaseClient) {
+        if (typeof supabase === 'undefined') {
+          console.warn('Supabase library blocked by client. Extension block active.');
+          return false;
+        }
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      return !!supabaseClient;
+    } catch (e) {
+      console.warn('Supabase initialization blocked safely:', e);
+      return false;
     }
   }
 
@@ -935,7 +989,6 @@
     if (instructionEl) {
       instructionEl.style.display = 'block';
     }
-    enableColorButtons(true);
     if (statusEl) {
       statusEl.textContent = '同じ色が選ばれました。もう一度選んでください。';
     }
@@ -943,21 +996,30 @@
 
   function broadcastResetSelection() {
     if (onlineChannel) {
-      onlineChannel.send({
-        type: 'broadcast',
-        event: 'reset',
-        payload: { clientId }
-      });
+      try {
+        onlineChannel.send({
+          type: 'broadcast',
+          event: 'reset',
+          payload: { clientId }
+        });
+      } catch (e) {
+        console.error('Broadcast reset failed:', e);
+      }
     }
   }
 
-  function startOnlineGame(passphrase, hintInit) {
+  function startOnlineGame(passphrase, hintInit, speechEnabledParam) {
     if (!passphrase) {
       alert('合言葉を入力してください');
       return;
     }
 
-    setupSupabaseClient();
+    if (!setupSupabaseClient()) {
+      alert('通信エラー: 広告ブロック等の拡張機能やプライバシー保護機能によりオンライン対戦への接続が遮断されました。拡張機能をオフにするか、CPU対戦をお楽しみください。');
+      showSetup();
+      return;
+    }
+    
     room = passphrase;
     clientId = createClientId();
     colorChoices = {};
@@ -965,14 +1027,16 @@
     myColor = null;
     opponentColor = null;
 
-    messageEl.textContent = '合言葉待機中… ' + room;
+    if (messageEl) messageEl.textContent = '合言葉待機中… ' + room;
 
     const modal = document.getElementById('modal-online-color');
     const statusEl = document.getElementById('online-status');
     if (statusEl) {
       statusEl.textContent = 'Supabase に接続中…';
     }
-    if (modal) modal.showModal();
+    if (modal) {
+      try { modal.showModal(); } catch(e){}
+    }
     const btnStart = document.getElementById('btn-online-game-start');
     if (btnStart) {
       btnStart.style.display = 'none';
@@ -983,33 +1047,35 @@
     if (instructionEl) {
       instructionEl.style.display = 'block';
     }
-    setupModalEl.close();
+    if (setupModalEl) {
+      try { setupModalEl.close(); } catch(e){}
+    }
 
     if (onlineChannel) {
-      onlineChannel.unsubscribe();
+      try { onlineChannel.unsubscribe(); } catch(e){}
       onlineChannel = null;
     }
 
-    onlineChannel = supabaseClient.channel(`room-${room}`)
-      .on('broadcast', { event: 'color' }, ({ payload }) => {
-        if (payload.clientId === clientId) return;
-        colorChoices[payload.clientId] = payload.color;
-        const instructionEl = document.getElementById('online-instruction');
-        if (instructionEl) {
-          instructionEl.style.display = 'block';
-        }
-        resolveOnlineColors(hintInit, statusEl, modal);
-      })
-      .on('broadcast', { event: 'reset' }, ({ payload }) => {
-        if (payload.clientId === clientId) return;
-        clearOnlineChoiceState(statusEl);
-      })
-      .on('broadcast', { event: 'move' }, ({ payload }) => {
-        if (payload.clientId === clientId) return;
-        handleRemoteMove(payload);
-      });
-
     try {
+      onlineChannel = supabaseClient.channel(`room-${room}`)
+        .on('broadcast', { event: 'color' }, ({ payload }) => {
+          if (payload.clientId === clientId) return;
+          colorChoices[payload.clientId] = payload.color;
+          const instructionEl = document.getElementById('online-instruction');
+          if (instructionEl) {
+            instructionEl.style.display = 'block';
+          }
+          resolveOnlineColors(hintInit, speechEnabledParam, statusEl, modal);
+        })
+        .on('broadcast', { event: 'reset' }, ({ payload }) => {
+          if (payload.clientId === clientId) return;
+          clearOnlineChoiceState(statusEl);
+        })
+        .on('broadcast', { event: 'move' }, ({ payload }) => {
+          if (payload.clientId === clientId) return;
+          handleRemoteMove(payload);
+        });
+
       onlineChannel.subscribe();
       if (statusEl) {
         statusEl.textContent = '合言葉待機中… 相手の参加を待っています。';
@@ -1017,21 +1083,21 @@
     } catch (error) {
       console.error('オンライン接続エラー', error);
       if (statusEl) {
-        statusEl.textContent = 'オンライン接続に失敗しました。ページを再読込してください。';
+        statusEl.textContent = 'オンライン接続に失敗しました。接続がブロックされている可能性があります。';
       }
     }
 
     const btnBlack = document.getElementById('btn-online-black');
     const btnWhite = document.getElementById('btn-online-white');
     if (btnBlack) btnBlack.onclick = () => {
-      sendOnlineColorChoice('black', hintInit, statusEl, modal);
+      sendOnlineColorChoice('black', hintInit, speechEnabledParam, statusEl, modal);
     };
     if (btnWhite) btnWhite.onclick = () => {
-      sendOnlineColorChoice('white', hintInit, statusEl, modal);
+      sendOnlineColorChoice('white', hintInit, speechEnabledParam, statusEl, modal);
     };
   }
 
-  function sendOnlineColorChoice(color, hintInit, statusEl, modal) {
+  function sendOnlineColorChoice(color, hintInit, speechEnabledParam, statusEl, modal) {
     if (!onlineChannel) return;
     const btnGameStart = document.getElementById('btn-online-game-start');
     if (btnGameStart) {
@@ -1044,16 +1110,20 @@
     colorChoices[clientId] = color;
     if (statusEl) statusEl.textContent = `あなたは${color === 'black' ? '黒' : '白'}を選択しました。相手の選択を待っています。`;
 
-    onlineChannel.send({
-      type: 'broadcast',
-      event: 'color',
-      payload: { clientId, color }
-    });
+    try {
+      onlineChannel.send({
+        type: 'broadcast',
+        event: 'color',
+        payload: { clientId, color }
+      });
+    } catch (e) {
+      console.error('Failed to send color choice:', e);
+    }
 
-    resolveOnlineColors(hintInit, statusEl, modal);
+    resolveOnlineColors(hintInit, speechEnabledParam, statusEl, modal);
   }
 
-  function resolveOnlineColors(hintInit, statusEl, modal) {
+  function resolveOnlineColors(hintInit, speechEnabledParam, statusEl, modal) {
     const ids = Object.keys(colorChoices);
     if (ids.length < 2) return;
 
@@ -1068,7 +1138,6 @@
     const assigned = colorChoices[clientId];
     if (statusEl) statusEl.textContent = 'ゲーム開始ボタンを押してゲームを始めてください。';
     
-    // 下部の説明テキストを非表示にする
     const instructionEl = document.getElementById('online-instruction');
     if (instructionEl) {
       instructionEl.style.display = 'none';
@@ -1079,9 +1148,11 @@
       btnGameStart.style.display = 'block';
       btnGameStart.disabled = false;
       btnGameStart.onclick = () => {
-        if (modal) modal.close();
-        startGame({ mode: 'pvp', level: '2', color: assigned, hintInit });
-        messageEl.textContent = '対局開始 — あなたは ' + (assigned === 'black' ? '黒（先手）' : '白（後手）');
+        if (modal) {
+          try { modal.close(); } catch(e){}
+        }
+        startGame({ mode: 'pvp', level: '2', color: assigned, hintInit, speechEnabled: speechEnabledParam });
+        if (messageEl) messageEl.textContent = '対局開始 — あなたは ' + (assigned === 'black' ? '黒（先手）' : '白（後手）');
       };
     }
   }
@@ -1105,6 +1176,7 @@
   }
 
   function updateSetupLabels() {
+    if (!setupFormEl) return;
     const checkedMode = setupFormEl.querySelector('input[name="mode"]:checked');
     const modeVal = checkedMode ? checkedMode.value : "cpu";
     const isCpu = modeVal === "cpu";
@@ -1119,7 +1191,7 @@
       updateCpuLevelLabel(levelSlider.value);
     }
 
-    const colorSection = colorLegendEl.closest('div');
+    const colorSection = colorLegendEl ? colorLegendEl.closest('div') : null;
 
     if (isCpu) {
       if (colorSection) colorSection.style.display = "block"; 
@@ -1127,8 +1199,8 @@
       const colorInputs = setupFormEl.querySelectorAll('input[name="color"]');
       colorInputs.forEach(input => input.disabled = false);
 
-      colorLegendEl.textContent = "あなたの色";
-      colorHintEl.textContent = "もう一方の色はCPUが操作します。黒が先手です。";
+      if (colorLegendEl) colorLegendEl.textContent = "あなたの色";
+      if (colorHintEl) colorHintEl.textContent = "もう一方の色はCPUが操作します。黒が先手です。";
     } else {
       if (colorSection) colorSection.style.display = "none"; 
 
@@ -1143,5 +1215,102 @@
     if (onlinePassphraseEl) {
       onlinePassphraseEl.style.display = isOnline ? "block" : "none";
     }
+
+    // ★★★ ここに追加 ★★★
+    handleModeSelection();
   }
+
+// モード選択後の処理（startGame または online 接続開始処理内）
+  function handleModeSelection() {
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    const charZone = document.getElementById("char-zone");
+
+    if (mode === "online") {
+      // オンライン時はセリフゾーンを非表示にする
+      if (charZone) {
+        charZone.classList.add("char-zone--hidden");
+      }
+    } else {
+      // CPU対戦時は表示する
+      if (charZone) {
+        charZone.classList.remove("char-zone--hidden");
+      }
+    }
+  }
+
+  async function initializeApp() {
+    try {
+      await loadCharacters();
+
+      if (setupFormEl) {
+        setupFormEl.querySelectorAll('input[name="mode"]').forEach((input) => {
+          input.addEventListener("change", updateSetupLabels);
+        });
+      }
+      
+      const setupLevelInput = document.getElementById('setup-level');
+      if (setupLevelInput) {
+        setupLevelInput.addEventListener('input', () => updateCpuLevelLabel(setupLevelInput.value));
+      }
+
+      const bestScoresBtn = document.getElementById('btn-best-scores');
+      if (bestScoresBtn) {
+        bestScoresBtn.addEventListener('click', (e) => { e.preventDefault(); openBestScoresWindow(); });
+      }
+
+      const btnOnlineCancel = document.getElementById('btn-online-cancel');
+      if (btnOnlineCancel) {
+        btnOnlineCancel.addEventListener('click', (e) => { e.preventDefault(); showSetup(); });
+      }
+
+      const btnRestart = document.getElementById("btn-restart");
+      if (btnRestart) { btnRestart.addEventListener("click", showSetup); }
+
+      const btnModalRestart = document.getElementById("btn-modal-restart");
+      if (btnModalRestart) { btnModalRestart.addEventListener("click", showSetup); }
+
+      const btnHint = document.getElementById("btn-hint");
+      if (btnHint) { btnHint.addEventListener("click", toggleHint); }
+      
+      if (gameoverBannerEl) {
+        const handleGameoverBannerClick = () => {
+          if (gameOver && gameoverModalEl && !gameoverModalEl.open) {
+            try { gameoverModalEl.showModal(); } catch(e){}
+          }
+        };
+        gameoverBannerEl.addEventListener("click", handleGameoverBannerClick);
+      }
+      if (boardWrapEl) {
+        const handleBoardClick = () => {
+          if (gameOver && gameoverModalEl && !gameoverModalEl.open) {
+            try { gameoverModalEl.showModal(); } catch(e){}
+          }
+        };
+        boardWrapEl.addEventListener("click", handleBoardClick);
+      }
+
+      if (gameAreaEl) {
+        gameAreaEl.classList.remove("game-area--hidden"); 
+        gameAreaEl.style.display = "block";
+      }
+      
+      loadBestScores();
+      updateBestScoresTable('best-scores-body');
+      createBoard(); 
+      renderBoard();
+      
+      updateSetupLabels();
+      showSetup(); 
+
+    } catch (initError) {
+      console.warn("Recovered from internal init block error:", initError);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => initializeApp());
+  } else {
+    initializeApp();
+  }
+
 })();
