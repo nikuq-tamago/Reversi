@@ -765,22 +765,22 @@
 
   function resultMessage(black, white) {
     if (!vsCpu) {
-      if (black > white) return `黒の勝ち！（${black} 対 ${white}）`;
-      if (white > black) return `白の勝ち！（${black} 対 ${white}）`;
-      return `引き分け！（${black} 対 ${white}）`;
+      if (black > white) return `黒の勝ち！（${black} vs ${white}）`;
+      if (white > black) return `白の勝ち！（${black} vs ${white}）`;
+      return `引き分け！（${black} vs ${white}）`;
     }
 
     const humanCount = humanColor === BLACK ? black : white;
     const cpuCount = humanColor === BLACK ? white : black;
     if (humanCount > cpuCount) {
-      return `あなたの勝ち！（${humanCount} 対 ${cpuCount}）`;
+      return `あなたの勝ち！（${humanCount} vs ${cpuCount}）`;
     }
     if (humanCount < cpuCount) {
       const ch = getCharacter(cpuLevel);
       const name = ch?.name || "CPU";
-      return `${name}の勝ち！（${humanCount} 対 ${cpuCount}）`;
+      return `${name}の勝ち！（${humanCount} vs ${cpuCount}）`;
     }
-    return `引き分け！（${humanCount} 対 ${cpuCount}）`;
+    return `引き分け！（${humanCount} vs ${cpuCount}）`;
   }
 
   function finishGame() {
@@ -808,7 +808,7 @@
 
     if (turnTextEl) turnTextEl.textContent = "終了";
     if (messageEl) messageEl.textContent = result;
-    const scoreText = `${black} 対 ${white}`;
+    const scoreText = `${black} vs ${white}`;
     if (modalBodyEl) {
       modalBodyEl.innerHTML = `
         <div class="modal-score">${scoreText}</div>
