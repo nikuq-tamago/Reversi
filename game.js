@@ -363,12 +363,10 @@
     if (gameOver) return "終了";
     if (vsCpu) {
       if (currentPlayer === humanColor) return "あなたの番";
-      const ch = getCharacter(cpuLevel);
-      const name = ch?.name || "CPU";
-      return `${name}の番`;
+      return "相手の番　";
     }
     if (networked) {
-      return currentPlayer === myColor ? "あなたの番" : "相手の番";
+      return currentPlayer === myColor ? "あなたの番" : "相手の番　";
     }
     return "";
   }
