@@ -396,13 +396,13 @@
     const ch = getCharacter(cpuLevel);
     if (!ch) return;
 
+    // ★画像と名前・タイトルの更新処理を戻しました
     if (charAvatarEl && charAvatarEl.tagName === "IMG") {
       if (ch.avatarUrl) {
         charAvatarEl.src = ch.avatarUrl;
         charAvatarEl.alt = ch.name || "キャラクター";
       }
     }
-
     if (charNameEl) charNameEl.textContent = ch.name || "";
     if (charTitleEl) charTitleEl.textContent = ch.title || "";
 
@@ -411,22 +411,25 @@
 
     if (type === "start") {
       line = randomFrom(lines.start);
+    } else if (type === "turn_eval") {
+      const { margin } = context; 
+      const abs = Math.abs(margin);
+      
+      // 状況に応じたセリフ選択（キー名が characters.json と一致するように調整してください）
+      if (margin > 8) line = randomFrom(lines.behind_big);
+      else if (margin > 0) line = randomFrom(lines.behind_close);
+      else if (margin === 0) line = randomFrom(lines.even);
+      else if (margin < -8) line = randomFrom(lines.lead_big);
+      else line = randomFrom(lines.lead_close);
     } else if (type === "win") {
-      const margin = context.margin ?? 0;
-      const big = Math.abs(margin) >= 10;
-      line = big ? randomFrom(lines.win_big) : randomFrom(lines.win_close);
+      line = Math.abs(context.margin ?? 0) >= 10 ? randomFrom(lines.win_big) : randomFrom(lines.win_close);
     } else if (type === "lose") {
-      const margin = context.margin ?? 0;
-      const big = Math.abs(margin) >= 10;
-      line = big ? randomFrom(lines.lose_big) : randomFrom(lines.lose_close);
+      line = Math.abs(context.margin ?? 0) >= 10 ? randomFrom(lines.lose_big) : randomFrom(lines.lose_close);
     } else if (type === "draw") {
       line = randomFrom(lines.draw);
     }
 
-    if (charLineEl && line) {
-      charLineEl.textContent = `「${line}」`;
-    }
-
+    if (charLineEl && line) charLineEl.textContent = `「${line}」`;
     charZoneEl.classList.remove("char-zone--hidden");
   }
 
@@ -712,6 +715,14 @@
   function endTurn(animateFlips) {
     renderBoard(animateFlips);
     updateScoreboard();
+
+    // ★ここに追加：一手打つごとにセリフを更新
+    if (!gameOver) {
+      const { black, white } = countPieces();
+      // 人間側の視点でのマージン（人間が黒なら black - white）
+      const margin = (humanColor === BLACK) ? (black - white) : (white - black);
+      updateCharacterSpeech("turn_eval", { margin });
+    }
 
     window.setTimeout(() => {
       const next = opponent(currentPlayer);
