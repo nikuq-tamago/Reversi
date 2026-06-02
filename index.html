@@ -20,11 +20,15 @@
     /* タイトル文字の配置 */
     .hero-title { 
       position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
-      width: 90%; 
-      font-size: 7.5vw; /* ★ 2.2rem から 7.5vw に変更 */
-      font-weight: 800; color: #fff;
+      width: 90%; font-size: 2.2rem; font-weight: 800; color: #fff;
       text-shadow: 0 4px 10px rgba(0,0,0,0.8); margin: 0;
       letter-spacing: 0.05em;
+    }
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 1.6rem; /* スマホ用にサイズを小さく */
+        top: 5%;           /* 元の10%から5%に変更し、少し上のほうに配置 */
+      }
     }
 
     /* GAME STARTボタンの配置（大型化） */
