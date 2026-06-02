@@ -535,3 +535,22 @@ body {
   outline: none;
   box-shadow: none;
 }
+
+/* ▼▼▼ スマホのセリフ切り替え時のちらつき（ガタつき）防止対策 ▼▼▼ */
+.char-line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* 最大2行まで表示（はみ出し防止） */
+  overflow: hidden;
+  
+  /* 常に2行分の高さを固定（文字サイズ13px × 行間1.5 × 2行 ≒ 39px） */
+  line-height: 1.5;
+  height: calc(13px * 1.5 * 2); 
+}
+
+.char-zone {
+  /* セリフが2行になったときでもアバター画像や枠がはみ出さない安全な高さに固定 */
+  min-height: 82px;
+  height: 82px; 
+}
+/* ▲▲▲ ここまで ▲▲▲ */

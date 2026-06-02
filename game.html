@@ -101,12 +101,16 @@
   </div>
 
   <dialog class="modal" id="modal-setup">
-    <div class="modal-content">
-      <h2>GAME SETUP</h2>
-      <form id="setup-form" method="dialog">
-      <a href="index.html" class="back-link" style="text-decoration: underline; color: #666;">
-        TOPへ戻る
-      </a>
+    <form id="setup-form" method="dialog">
+      <div class="modal-content">
+        
+        <div style="text-align: left; margin-bottom: 15px;">
+          <a href="index.html" class="back-link" style="display: inline-block; text-decoration: underline; color: #94a3b8; font-size: 14px;">
+            ← TOPへ戻る
+          </a>
+        </div>
+
+        <h2>GAME SETUP</h2>
         
         <div class="form-group">
           <label class="form-label">対戦モード</label>
@@ -166,8 +170,8 @@
           <button type="button" id="btn-best-scores" class="btn btn--secondary">Best-Scores</button>
           <button type="submit" class="btn btn--primary" style="flex:2;">対局開始</button>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </dialog>
 
   <dialog class="modal" id="modal-gameover">
@@ -230,14 +234,12 @@
     </div>
   </dialog>
 
- <!-- ★ 追加したスクリプト -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const modeRadios = document.querySelectorAll('input[name="mode"]');
   const charZone = document.getElementById("char-zone");
   const speechCheckbox = document.getElementById("setup-speech");
 
-  // ★ チェックボックスの親ラベルを取得
   const speechWrapper = speechCheckbox ? speechCheckbox.closest(".radio-label") : null;
 
   modeRadios.forEach(radio => {
@@ -252,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
           speechCheckbox.disabled = true;
         }
 
-        // ★ オンライン時は UI から完全に消す
         if (speechWrapper) {
           speechWrapper.style.display = "none";
         }
@@ -264,8 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
           speechCheckbox.disabled = false;
         }
 
-        // ★ CPU時は再表示
-        if (speechWrapper) {
+          if (speechWrapper) {
           speechWrapper.style.display = "flex";
         }
       }

@@ -13,37 +13,83 @@
     body { margin: 0; font-family: sans-serif; background: #0f172a; color: #fff; line-height: 1.6; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
     
-    /* ヒーローセクション（重ね合わせ） */
-    .hero-wrap { position: relative; width: 100%; text-align: center; margin-bottom: 30px; }
-    .hero-img { width: 100%; border-radius: 12px; display: block; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    
-    /* タイトル文字の配置 */
-    .hero-title { 
-      position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
-      width: 90%; font-size: 2.2rem; font-weight: 800; color: #fff;
-      text-shadow: 0 4px 10px rgba(0,0,0,0.8); margin: 0;
-      letter-spacing: 0.05em;
+    /* ヒーローセクション（PC・スマホ共通のベース設定） */
+    .hero-wrap { 
+      position: relative; 
+      width: 100%; 
+      max-height: 85vh;    /* ★トップ画像を大きくするため、75vhから85vhに拡大 */
+      margin-bottom: 80px; /* ★PC画面でSTORYを見切れないように下に強く押し下げる（余白を拡大） */
+      text-align: center;
     }
-    @media (max-width: 480px) {
-      .hero-title {
-        font-size: 1.6rem; /* スマホ用にサイズを小さく */
-        top: 5%;           /* 元の10%から5%に変更し、少し上のほうに配置 */
-      }
+    
+    .hero-img { 
+      width: 100%; 
+      max-height: 85vh;    /* ★画像自体の最大高さ制限も85vhに拡大 */
+      object-fit: contain; /* 画像を一切削らず、比率を保ったまま全体を表示 */
+      display: block; 
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      margin: 0 auto;     /* 中央寄せ */
+    }
+    
+    /* タイトル文字の配置（PC用） */
+    .hero-title { 
+      position: absolute; 
+      top: 6%; /* 画像が大きくなったのに合わせて少し上に微調整 */
+      left: 50%; 
+      transform: translateX(-50%);
+      width: 90%; 
+      font-size: 2.2rem; 
+      font-weight: 800; 
+      color: #fff;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.8); 
+      margin: 0;
+      letter-spacing: 0.05em;
+      text-align: center;
     }
 
-    /* GAME STARTボタンの配置（大型化） */
+    /* GAME STARTボタンの配置（PC用） */
     .btn-start { 
-      position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%);
-      padding: 18px 40px; font-size: 1.8rem; font-weight: bold;
+      position: absolute; 
+      bottom: 6%; /* 画像が大きくなったのに合わせて少し下に微調整 */
+      left: 50%; 
+      transform: translateX(-50%);
+      padding: 14px 35px; 
+      font-size: 1.6rem;   
+      font-weight: bold;
       background: linear-gradient(135deg, #f59e0b, #ef4444); 
       color: white;
-      text-decoration: none; border-radius: 50px; 
+      text-decoration: none; 
+      border-radius: 50px; 
       box-shadow: 0 8px 20px rgba(239, 68, 68, 0.6); 
       border: 3px solid white;
       white-space: nowrap;
       transition: transform 0.2s;
     }
     .btn-start:hover { transform: translateX(-50%) scale(1.05); }
+    
+    /* ▼▼▼ スマホ用のメディアクエリ（レスポンシブ設定） ▼▼▼ */
+    @media (max-width: 480px) {
+      .hero-wrap {
+        height: calc(100dvh - 40px); /* スマホ画面いっぱいに広げる */
+        max-height: none; 
+        margin-bottom: 0; /* スマホ時は100dvhで押し下げるため0でOK */
+      }
+      .hero-img {
+        height: 100%;
+        max-height: none;
+        object-fit: cover; /* スマホ時は画面に敷き詰めるためcover */
+      }
+      .hero-title {
+        font-size: 1.6rem; /* スマホ用にサイズを縮小（1行化） */
+        top: 3%;           /* スマホ時は少し上のほうに配置 */
+      }
+      .btn-start {
+        bottom: 15%;       /* スマホ時はボタンを少し上に配置 */
+        padding: 18px 40px;
+        font-size: 1.8rem;
+      }
+    }
     
     /* セクション共通 */
     section { padding: 30px 0; border-top: 1px solid #1e293b; }
