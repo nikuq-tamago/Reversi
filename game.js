@@ -1047,6 +1047,9 @@
     myColor = null;
     opponentColor = null;
 
+    // 追加: チャンネル名用に文字列を正規化し、URLエンコードして安全な半角英数字にする
+    const safeChannelId = encodeURIComponent(passphrase.normalize('NFKC'));
+
     if (messageEl) messageEl.textContent = '合言葉待機中… ' + room;
 
     const modal = document.getElementById('modal-online-color');
@@ -1077,7 +1080,8 @@
     }
 
     try {
-      onlineChannel = supabaseClient.channel(`room-${room}`)
+      // 修正: room ではなく safeChannelId を指定する
+      onlineChannel = supabaseClient.channel(`room-${safeChannelId}`)
         .on('broadcast', { event: 'color' }, ({ payload }) => {
           if (payload.clientId === clientId) return;
           colorChoices[payload.clientId] = payload.color;
