@@ -363,10 +363,10 @@
     if (gameOver) return "終了";
     if (vsCpu) {
       if (currentPlayer === humanColor) return "あなたの番";
-      return "相手の番　";
+      return "相手の番 ";
     }
     if (networked) {
-      return currentPlayer === myColor ? "あなたの番" : "相手の番　";
+      return currentPlayer === myColor ? "あなたの番" : "相手の番 ";
     }
     return "";
   }
@@ -396,7 +396,6 @@
     const ch = getCharacter(cpuLevel);
     if (!ch) return;
 
-    // ★画像と名前・タイトルの更新処理を戻しました
     if (charAvatarEl && charAvatarEl.tagName === "IMG") {
       if (ch.avatarUrl) {
         charAvatarEl.src = ch.avatarUrl;
@@ -415,7 +414,6 @@
       const { margin } = context; 
       const abs = Math.abs(margin);
       
-      // 状況に応じたセリフ選択（キー名が characters.json と一致するように調整してください）
       if (margin > 8) line = randomFrom(lines.behind_big);
       else if (margin > 0) line = randomFrom(lines.behind_close);
       else if (margin === 0) line = randomFrom(lines.even);
@@ -716,10 +714,8 @@
     renderBoard(animateFlips);
     updateScoreboard();
 
-    // ★ここに追加：一手打つごとにセリフを更新
     if (!gameOver) {
       const { black, white } = countPieces();
-      // 人間側の視点でのマージン（人間が黒なら black - white）
       const margin = (humanColor === BLACK) ? (black - white) : (white - black);
       updateCharacterSpeech("turn_eval", { margin });
     }
@@ -878,6 +874,19 @@
     renderBoard();
     updateScoreboard();
     scheduleCpuTurn();
+
+    // ▼▼▼ 追加：対局開始時の自動スクロール処理 ▼▼▼
+    // モーダルが閉じて配置が確定した後に実行するため、少し遅延を入れます
+    setTimeout(() => {
+      if (charZoneEl && !charZoneEl.classList.contains("char-zone--hidden")) {
+        // CPU対戦：キャラのセリフ枠の上部を画面最上部に合わせる
+        charZoneEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (gameAreaEl) {
+        // オンライン対戦（キャラ非表示）：盤面（gameAreaEl）の上部を画面最上部に合わせる
+        gameAreaEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+    // ▲▲▲ 追加ここまで ▲▲▲
   }
 
   function showSetup() {
@@ -899,7 +908,9 @@
 
     if (charZoneEl) charZoneEl.classList.add("char-zone--hidden");
 
-    if (gameAreaEl) gameAreaEl.classList.add("game-area--hidden");
+    if (gameAreaEl) {
+      gameAreaEl.classList.add("game-area--hidden");
+    }
 
     if (gameoverModalEl && gameoverModalEl.open) {
       try { gameoverModalEl.close(); } catch(e){}
@@ -1225,22 +1236,18 @@
       onlinePassphraseEl.style.display = isOnline ? "block" : "none";
     }
 
-    // ★★★ ここに追加 ★★★
     handleModeSelection();
   }
 
-// モード選択後の処理（startGame または online 接続開始処理内）
   function handleModeSelection() {
     const mode = document.querySelector('input[name="mode"]:checked').value;
     const charZone = document.getElementById("char-zone");
 
     if (mode === "online") {
-      // オンライン時はセリフゾーンを非表示にする
       if (charZone) {
         charZone.classList.add("char-zone--hidden");
       }
     } else {
-      // CPU対戦時は表示する
       if (charZone) {
         charZone.classList.remove("char-zone--hidden");
       }
