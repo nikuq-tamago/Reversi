@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EJL3SSZJYN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EJL3SSZJYN');
+</script>
+
+
+
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>STRIKE REVERSI</title>
+  <link rel="icon" href="../assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+
+  <meta name="description" content="A high-quality, free-to-play browser Reversi (Othello) game. Featuring AI battles, online play, and mobile support.">
+
+  <meta property="og:site_name" content="STRIKE REVERSI">
+  <meta property="og:title" content="STRIKE REVERSI">
+  <meta property="og:description" content="Play high-quality Reversi in your browser. Features CPU battles, online matches, and mobile support.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nikuq-tamago.github.io/Reversi/en/">
+  <meta property="og:image" content="https://nikuq-tamago.github.io/Reversi/assets/ogp.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="app">
+    <div id="gameover-banner" class="gameover-banner" hidden>
+      <div class="gameover-banner-content">
+        <div id="gameover-headline" class="gameover-headline">Black Wins!</div>
+        <div class="gameover-subline">Tap to view detailed score</div>
+      </div>
+    </div>
+
+    <header class="header">
+      <h1 class="title">STRIKE REVERSI</h1>
+      <p id="subtitle" class="subtitle">vs CPU — Black moves first</p>
+    </header>
+
+    <section class="scoreboard">
+      <div id="card-black" class="score-card">
+        <span id="label-black" class="score-label">Black</span>
+        <span id="count-black" class="score-value">2</span>
+      </div>
+
+      <div class="turn-indicator">
+        <div id="turn-disc" class="turn-disc disc--black"></div>
+        <span id="turn-text" class="turn-text">Your turn</span>
+      </div>
+
+      <div id="card-white" class="score-card">
+        <span id="label-white" class="score-label">White</span>
+        <span id="count-white" class="score-value">2</span>
+      </div>
+    </section>
+
+    <div id="char-zone" class="char-zone char-zone--hidden">
+      <div class="char-avatar-wrap">
+        <img id="char-avatar" class="char-avatar" src="../assets/chars/kokoro.jpg" alt="Character">
+      </div>
+      <div class="char-content">
+        <div class="char-meta">
+          <span id="char-name" class="char-name">Kokoro</span>
+          <span id="char-title" class="char-title">Beginner</span>
+        </div>
+        <p id="char-line" class="char-line">"Let's play! I'll do my best!"</p>
+      </div>
+    </div>
+
+    <main id="game-area" class="game-area game-area--hidden">
+      <div class="board-wrap">
+        <div id="board" role="grid" aria-label="Reversi Board"></div>
+      </div>
+
+      <div id="message" class="message" aria-live="polite"></div>
+
+      <div class="controls">
+        <button type="button" id="btn-hint" class="btn btn--secondary">Show Hints</button>
+        <button type="button" id="btn-restart" class="btn btn--danger">Quit</button>
+      </div>
+      
+      <div class="best-scores-preview">
+        <h3>Best Scores (Max Discs)</h3>
+        <table class="best-scores-table">
+          <thead>
+            <tr>
+              <th>Lv1</th>
+              <th>Lv2</th>
+              <th>Lv3</th>
+              <th>Lv4</th>
+              <th>Lv5</th>
+            </tr>
+          </thead>
+          <tbody id="best-scores-body">
+            <tr><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>© 2026 STRIKE REVERSI. Powered by GitHub Pages.</p>
+    </footer>
+  </div>
+
+  <dialog class="modal" id="modal-setup">
+    <form id="setup-form" method="dialog">
+      <div class="modal-content">
+        
+        <div style="text-align: left; margin-bottom: 15px;">
+          <a href="index.html" class="back-link" style="display: inline-block; text-decoration: underline; color: #94a3b8; font-size: 14px;">
+            ← Back to Top
+          </a>
+        </div>
+
+        <h2>GAME SETUP</h2>
+        
+        <div class="form-group">
+          <label class="form-label">Game Mode</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="mode" value="cpu" checked>
+              <span>vs CPU</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="mode" value="online">
+              <span>Online Match</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="cpu-level-control">
+          <label class="form-label">CPU Difficulty: <span id="setup-level-label" class="level-badge">Lv3: Normal</span></label>
+          <input type="range" id="setup-level" min="1" max="5" value="3" step="1" style="width:100%; margin-top:4px;">
+        </div>
+
+        <div class="form-group" id="online-passphrase" style="display:none;">
+          <label class="form-label" for="setup-passphrase">Room Code</label>
+          <input type="text" id="setup-passphrase" placeholder="e.g., abcd123" style="width:100%; padding:10px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#fff; font-weight:bold;">
+          <p class="form-hint">※ Match with someone using the same Room Code.</p>
+        </div>
+
+        <div class="form-group">
+          <label id="color-legend" class="form-label">Your Color</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="color" value="black" checked>
+              <span>Black (First)</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="color" value="white">
+              <span>White (Second)</span>
+            </label>
+          </div>
+          <p id="color-hint" class="form-hint">The other color is controlled by the CPU. Black moves first.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Settings</label>
+          <div class="radio-group" style="flex-direction: column; gap: 8px;">
+            <label class="radio-label" style="justify-content: flex-start; padding: 10px 14px; width: 100%;">
+              <input type="checkbox" id="setup-hint">
+              <span style="margin-left: 8px;">Show hints for valid moves</span>
+            </label>
+            <label class="radio-label" style="justify-content: flex-start; padding: 10px 14px; width: 100%;">
+              <input type="checkbox" id="setup-speech" checked>
+              <span style="margin-left: 8px;">Show character dialogue</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top:24px; display:flex; gap:10px;">
+          <button type="button" id="btn-best-scores" class="btn btn--secondary">Best Scores</button>
+          <button type="submit" class="btn btn--primary" style="flex:2;">Start Game</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="modal-gameover">
+    <div class="modal-content text-center">
+      <h2>RESULT</h2>
+      <div id="modal-body">
+        <div class="modal-score">0 vs 0</div>
+      </div>
+      <div class="modal-actions" style="margin-top:20px; display:flex; gap:10px;">
+        <button type="button" id="btn-modal-restart" class="btn btn--primary" style="width:100%;">Back</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="modal-best-scores">
+    <div class="modal-content">
+      <h2>BEST SCORES</h2>
+      <p style="text-align:center; color:#94a3b8; font-size:12px; margin-bottom:15px;">Highest disc counts achieved in CPU matches</p>
+      
+      <table class="best-scores-table" style="margin-bottom:20px;">
+        <thead>
+          <tr>
+            <th>Lv1<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">Kokoro</span></th>
+            <th>Lv2<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">Ren</span></th>
+            <th>Lv3<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">Jack</span></th>
+            <th>Lv4<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">Tetsuma</span></th>
+            <th>Lv5<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">Leila</span></th>
+          </tr>
+        </thead>
+        <tbody id="best-scores-body-popup">
+          <tr><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+        </tbody>
+      </table>
+
+      <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+        <button type="button" id="btn-clear-best-scores" class="btn btn--secondary">Clear</button>
+        <button type="button" id="btn-back-best-scores" class="btn btn--primary">Back</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="modal-online-color">
+    <div class="modal-content" style="text-align:center;">
+      <h2>ONLINE MATCH</h2>
+      <p id="online-status" style="color:#94a3b8; margin-bottom:15px; font-size:13px;">Waiting for opponent...</p>
+      
+      <div id="online-instruction" style="margin-bottom: 15px; font-size: 13px; color: #38bdf8; font-weight: bold;">
+        Select your color:
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px;">
+        <button type="button" id="btn-online-black" class="btn btn--secondary" style="flex:1;">Black (First)</button>
+        <button type="button" id="btn-online-white" class="btn btn--secondary" style="flex:1;">White (Second)</button>
+      </div>
+      
+      <div class="modal-actions" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
+        <button type="button" id="btn-online-game-start" class="btn btn--primary" style="width:100%; display:none;" disabled>Enter Room</button>
+        <button type="button" id="btn-online-cancel" class="btn btn--danger" style="width:100%;">Cancel Match</button>
+      </div>
+    </div>
+  </dialog>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modeRadios = document.querySelectorAll('input[name="mode"]');
+  const charZone = document.getElementById("char-zone");
+  const speechCheckbox = document.getElementById("setup-speech");
+
+  const speechWrapper = speechCheckbox ? speechCheckbox.closest(".radio-label") : null;
+
+  modeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (!charZone) return;
+
+      if (e.target.value === 'online') {
+        charZone.classList.add("char-zone--hidden");
+
+        if (speechCheckbox) {
+          speechCheckbox.checked = false;
+          speechCheckbox.disabled = true;
+        }
+
+        if (speechWrapper) {
+          speechWrapper.style.display = "none";
+        }
+
+      } else {
+        charZone.classList.remove("char-zone--hidden");
+
+        if (speechCheckbox) {
+          speechCheckbox.disabled = false;
+        }
+
+          if (speechWrapper) {
+          speechWrapper.style.display = "flex";
+        }
+      }
+    });
+  });
+});
+</script>
+ <script src="game_en.js"></script>
+</body>
+</html>

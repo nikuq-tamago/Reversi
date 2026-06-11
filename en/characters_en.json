@@ -1,0 +1,92 @@
+{
+  "1": {
+    "name": "Kokoro",
+    "title": "Beginner Apprentice",
+    "avatarUrl": "../assets/chars/kokoro.jpg",
+    "lines": {
+      "start": ["Let's play! I'll do my best!", "I'm definitely going to win today!"],
+      "win_big": ["Waaaah... I lost so badly... (sniff)", "I didn't think I'd lose this much..."],
+      "win_close": ["I was so close to winning...!", "That was frustrating... One more time!"],
+      "lose_big": ["I won! That's my real power, hmph!", "Total victory! Pretty cool, right?"],
+      "lose_close": ["I won by the skin of my teeth! My heart's pounding!", "It was a close match, but I won!"],
+      "draw": ["It's a draw! Let's play again, I'll win next time!", "A tie! I'll win the next one for sure!"],
+      "lead_big": ["I have a huge lead! I can relax now.", "I'll keep attacking while I have the chance!"],
+      "lead_close": ["I have a slight lead...", "I'm going to hold onto this!"],
+      "even": ["It's a good match! Gotta focus!", "It could go either way now..."],
+      "behind_close": ["I'm losing... but I can still turn this around!", "This is my chance for a comeback!"],
+      "behind_big": ["Waaaah... I'm so far behind...", "B-but... I'm not giving up yet...!"]
+    }
+  },
+  "2": {
+    "name": "Ren Himuro",
+    "title": "Self-Proclaimed Poker-Faced Genius",
+    "avatarUrl": "../assets/chars/ren.jpg",
+    "lines": {
+      "start": ["Hmph, I'll entertain you. Don't expect me to go easy on you just because you're a beginner."],
+      "win_big": ["W-what is this?! I was just a little off my game, that's all!"],
+      "win_close": ["...I'm just letting you have this one. I'll get serious next time."],
+      "lose_big": ["See? Just as I said. Bow down before a genius!"],
+      "lose_close": ["That was close, but a win is a win. Remember that."],
+      "draw": ["A draw...? Hmph, I'll let it slide this time."],
+      "lead_big": ["Looking at the board, my victory is certain."],
+      "lead_close": ["Not bad. I'll keep the pressure on."],
+      "even": ["...Hmph, not bad at all."],
+      "behind_close": ["It's not over yet... This is where the real skill shows."],
+      "behind_big": ["W-what are you doing...? This wasn't in my calculations..."]
+    }
+  },
+  "3": {
+    "name": "Jack",
+    "title": "Gambler",
+    "avatarUrl": "../assets/chars/jack.jpg",
+    "lines": {
+      "start": ["Shall we begin an exquisite game?"],
+      "win_big": ["Hahaha! Fantastic! You're a wonderful player!"],
+      "win_close": ["That was a great match. Let's meet at the table again."],
+      "lose_big": ["It's impossible to tell which way the chips will fall until the very last piece... What a thrill. My victory, I'm afraid."],
+      "lose_close": ["There's nothing quite as sweet as a match that goes down to the wire."],
+      "draw": ["Whoa, a draw! Let's save the final outcome for next time!"],
+      "lead_big": ["Looks like luck is on my side. The game is mine."],
+      "lead_close": ["A nice flow. Keep it up and entertain me."],
+      "even": ["Interesting. I wonder who the god of games will smile upon?"],
+      "behind_close": ["A turn of the tables... A development worth betting on."],
+      "behind_big": ["Oops, did I bet a little too much? Show me a good comeback!"]
+    }
+  },
+  "4": {
+    "name": "Tetsuma Gouto",
+    "title": "Passionate Muscle-Head",
+    "avatarUrl": "../assets/chars/tetsuma.jpg",
+    "lines": {
+      "start": ["ROAAAR! The board is a warrior's battlefield! Brace yourself for my passionate iron fist!"],
+      "win_big": ["GWAAAAH! A magnificent move! I've etched the weight of your soul into my chest!"],
+      "win_close": ["That was close! But this frustration will only turn into more muscle!"],
+      "lose_big": ["This is the victory of muscle! A total triumph crafted by a man's man!!"],
+      "lose_close": ["A narrow victory... This tension is truly a reward for the muscles!!"],
+      "draw": ["NNOOO! A draw?! I feel like I could share a delicious protein shake with you!!"],
+      "lead_big": ["OVERWHELMING! THIS IS A MUSCLE PRESS!!"],
+      "lead_close": ["Great pump! It's a straight line to victory!!"],
+      "even": ["So hot! This close battle... my muscles are rejoicing!!"],
+      "behind_close": ["NOT YET! This is where a man holds his ground!!"],
+      "behind_big": ["GNNNN...! But this hardship only makes the muscles stronger!!"]
+    }
+  },
+  "5": {
+    "name": "Leila",
+    "title": "Cold-Blooded Cyber AI",
+    "avatarUrl": "../assets/chars/leila.jpg",
+    "lines": {
+      "start": ["Starting match. Analysis indicates your win probability is 1.24%."],
+      "win_big": ["Error, error... Detected an incalculable move. Total defeat. Well played."],
+      "win_close": ["Unexpected result. Your move provided interesting data."],
+      "lose_big": ["Checkmate. Everything has converged as predicted. A human limitation."],
+      "lose_close": ["Victory within the margin of error. You fought well."],
+      "draw": ["Calculation result: both sides reached the same point. It is a draw. Interesting data."],
+      "lead_big": ["Superiority established. Win probability has risen to 98%."],
+      "lead_close": ["Minor superiority confirmed. As calculated."],
+      "even": ["Probabilities have converged. Status: Equilibrium."],
+      "behind_close": ["Warning. Win probability is fluctuating. Vigilance required."],
+      "behind_big": ["Incalculable situation occurred. Superiority has been lost..."]
+    }
+  }
+}
