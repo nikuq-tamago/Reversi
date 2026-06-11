@@ -1,41 +1,92 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EJL3SSZJYN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EJL3SSZJYN');
+</script>
+
+
+
+
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>STRIKE REVERSI | 無料オンライン対戦リバーシ</title>
-  <meta name="description" content="インストール不要！ブラウザですぐ遊べる無料リバーシ。AI対戦・オンライン対戦対応。最強AIレイラに挑戦しよう。">
-  <meta property="og:title" content="STRIKE REVERSI">
+  
+  <script>
+    (function() {
+      // 手動で日本語版に戻ってきたユーザーが再び強制転送されるのを防ぐため、sessionStorageを使用
+      if (!sessionStorage.getItem('lang_redirected')) {
+        const userLang = navigator.language || navigator.userLanguage;
+        if (userLang && !userLang.startsWith('ja')) {
+          sessionStorage.setItem('lang_redirected', 'true');
+          window.location.href = './en/';
+        }
+      }
+    })();
+  </script>
+
+  <title>STRIKE REVERSI | 無料オンライン対戦リバーシ・Othello | Free Reversi Online</title>
+  <meta name="description" content="インストール不要！ブラウザですぐ遊べる無料リバーシ。AI対戦・オンライン対戦対応。最強AIレイラに挑戦しよう。Free Reversi/Othello game with no download. Play online with friends using a room code or challenge 5-level AI. Mobile & PC supported.">
+  <meta name="keywords" content="リバーシ, オセロ, 無料, オンライン対戦, ブラウザゲーム, インストール不要, 二人対戦, 合言葉対戦, AI対戦, スマホ対応, STRIKE REVERSI, Reversi, Othello, free online game, play with friends, no download, browser game">
   <link rel="icon" href="assets/favicon.png" type="image/png">
+
+  <meta property="og:title" content="STRIKE REVERSI | 無料オンライン対戦リバーシ・Othello">
+  <meta property="og:description" content="インストール不要の無料リバーシ。オンライン対戦・5段階AI対戦対応。スマホ・PCで今すぐ遊べる！">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nikuq-tamago.github.io/Reversi/">
   <meta property="og:image" content="https://nikuq-tamago.github.io/Reversi/assets/ogp.jpg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="STRIKE REVERSI | 無料オンライン対戦リバーシ">
+  <meta name="twitter:description" content="インストール不要・無料で遊べるリバーシ。オンライン対戦＆AI対戦対応。スマホ・PC対応。">
+  <meta name="twitter:image" content="https://nikuq-tamago.github.io/Reversi/assets/ogp.jpg">
+
+  <link rel="alternate" hreflang="ja" href="https://nikuq-tamago.github.io/Reversi/">
+  <link rel="alternate" hreflang="en" href="https://nikuq-tamago.github.io/Reversi/en/">
+  <link rel="alternate" hreflang="x-default" href="https://nikuq-tamago.github.io/Reversi/">
   
   <style>
     body { margin: 0; font-family: sans-serif; background: #0f172a; color: #fff; line-height: 1.6; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
     
+    /* 言語切り替えリンクのスタイル */
+    .lang-header { text-align: right; padding-bottom: 10px; }
+    .lang-footer { text-align: center; padding: 20px 0; margin-top: 20px; border-top: 1px solid #1e293b; }
+    .lang-link { color: #38bdf8; text-decoration: none; font-size: 0.9rem; font-weight: bold; }
+    .lang-link:hover { text-decoration: underline; }
+
     /* ヒーローセクション（PC・スマホ共通のベース設定） */
     .hero-wrap { 
       position: relative; 
       width: 100%; 
-      max-height: 85vh;    /* ★トップ画像を大きくするため、75vhから85vhに拡大 */
-      margin-bottom: 80px; /* ★PC画面でSTORYを見切れないように下に強く押し下げる（余白を拡大） */
+      max-height: 85vh; 
+      margin-bottom: 80px; 
       text-align: center;
     }
     
     .hero-img { 
       width: 100%; 
-      max-height: 85vh;    /* ★画像自体の最大高さ制限も85vhに拡大 */
-      object-fit: contain; /* 画像を一切削らず、比率を保ったまま全体を表示 */
+      max-height: 85vh; 
+      object-fit: contain; 
       display: block; 
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      margin: 0 auto;     /* 中央寄せ */
+      margin: 0 auto; 
     }
     
-    /* タイトル文字の配置（PC用） */
+    /* タイトル文字の配置 */
     .hero-title { 
       position: absolute; 
-      top: 6%; /* 画像が大きくなったのに合わせて少し上に微調整 */
+      top: 6%; 
       left: 50%; 
       transform: translateX(-50%);
       width: 90%; 
@@ -48,10 +99,10 @@
       text-align: center;
     }
 
-    /* GAME STARTボタンの配置（PC用） */
+    /* GAME STARTボタンの配置 */
     .btn-start { 
       position: absolute; 
-      bottom: 6%; /* 画像が大きくなったのに合わせて少し下に微調整 */
+      bottom: 6%; 
       left: 50%; 
       transform: translateX(-50%);
       padding: 14px 35px; 
@@ -68,24 +119,24 @@
     }
     .btn-start:hover { transform: translateX(-50%) scale(1.05); }
     
-    /* ▼▼▼ スマホ用のメディアクエリ（レスポンシブ設定） ▼▼▼ */
+    /* スマホ用のメディアクエリ（レスポンシブ設定） */
     @media (max-width: 480px) {
       .hero-wrap {
-        height: calc(100dvh - 40px); /* スマホ画面いっぱいに広げる */
+        height: calc(100dvh - 40px); 
         max-height: none; 
-        margin-bottom: 0; /* スマホ時は100dvhで押し下げるため0でOK */
+        margin-bottom: 0; 
       }
       .hero-img {
         height: 100%;
         max-height: none;
-        object-fit: cover; /* スマホ時は画面に敷き詰めるためcover */
+        object-fit: cover; 
       }
       .hero-title {
-        font-size: 1.6rem; /* スマホ用にサイズを縮小（1行化） */
-        top: 3%;           /* スマホ時は少し上のほうに配置 */
+        font-size: 1.6rem; 
+        top: 3%; 
       }
       .btn-start {
-        bottom: 15%;       /* スマホ時はボタンを少し上に配置 */
+        bottom: 15%; 
         padding: 18px 40px;
         font-size: 1.8rem;
       }
@@ -101,9 +152,14 @@
     .char-card img { width: 60px; height: 60px; border-radius: 50%; margin-right: 15px; object-fit: cover; border: 2px solid #38bdf8; }
   </style>
 </head>
+
 <body>
 
   <div class="container">
+    <div class="lang-header">
+      <a href="./en/" class="lang-link">English</a>
+    </div>
+
     <header class="hero-wrap">
       <img src="assets/main.png" alt="メインビジュアル" class="hero-img">
       <h1 class="hero-title">STRIKE REVERSI</h1>
@@ -127,6 +183,10 @@
         <div class="char-card"><img src="assets/chars/leila.jpg" alt="レイラ"><div><strong>レイラ</strong><br><small>冷徹なる電脳AI</small></div></div>
       </div>
     </section>
+
+    <footer class="lang-footer">
+      <a href="./en/" class="lang-link">English</a>
+    </footer>
   </div>
 
 </body>

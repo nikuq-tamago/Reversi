@@ -75,6 +75,27 @@
 
   let CPU_CHARACTERS = {};
 
+  // サウンド再生用
+  let placementSound = null;
+
+  function initPlacementSound() {
+    if (!placementSound) {
+      placementSound = new Audio('./pashhi.mp3');
+      placementSound.volume = 0.5;
+    }
+  }
+
+  function playPlacementSound() {
+    initPlacementSound();
+    if (placementSound) {
+      placementSound.currentTime = 0;
+      placementSound.play().catch(err => {
+        // 自動再生がブロックされている可能性があるため、エラーは無視
+        console.debug('音声再生スキップ:', err);
+      });
+    }
+  }
+
   async function loadCharacters() {
     try {
       const res = await fetch("characters.json", { cache: "no-cache" });
@@ -711,6 +732,7 @@
   }
 
   function endTurn(animateFlips) {
+    playPlacementSound();
     renderBoard(animateFlips);
     updateScoreboard();
 
