@@ -1,13 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- 日本語版トップページ -->
   <url>
     <loc>https://nikuq-tamago.github.io/Reversi/</loc>
-    <lastmod>2026-06-11</lastmod>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-06-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
+
+  <!-- 日本語版ゲームページ -->
+  <url>
+    <loc>https://nikuq-tamago.github.io/Reversi/game.html</loc>
+    <lastmod>2026-06-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 英語版トップページ -->
   <url>
     <loc>https://nikuq-tamago.github.io/Reversi/en/</loc>
-    <lastmod>2026-06-11</lastmod>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-06-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
+
+  <!-- 英語版ゲームページ -->
+  <url>
+    <loc>https://nikuq-tamago.github.io/Reversi/en/game_en.html</loc>
+    <lastmod>2026-06-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>
