@@ -101,14 +101,16 @@
       text-align: center;
     }
 
-    /* カタカナ表記のサブタイトル用スタイル */
+    /* 【修正箇所】カタカナ表記を視覚的に非表示にするスタイル */
     .hero-title span {
-      display: block;
-      font-size: 1.2rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      margin-top: 5px;
-      opacity: 0.9;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
     }
 
     /* GAME STARTボタンの配置 */
@@ -146,9 +148,6 @@
       .hero-title {
         font-size: 1.6rem; 
         top: 3%; 
-      }
-      .hero-title span {
-        font-size: 0.9rem;
       }
       .btn-start {
         bottom: 15%; 
