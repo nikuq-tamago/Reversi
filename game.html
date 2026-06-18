@@ -39,13 +39,6 @@
 <body>
 
   <div class="app">
-    <div id="gameover-banner" class="gameover-banner" hidden>
-      <div class="gameover-banner-content">
-        <div id="gameover-headline" class="gameover-headline">黒の勝ち</div>
-        <div class="gameover-subline">タップで詳細スコアを表示</div>
-      </div>
-    </div>
-
     <header class="header">
       <h1 class="title">STRIKE REVERSI</h1>
       <p id="subtitle" class="subtitle">CPU対戦 — 黒が先手</p>
@@ -84,6 +77,12 @@
     <main id="game-area" class="game-area game-area--hidden">
       <div class="board-wrap">
         <div id="board" role="grid" aria-label="オセロ盤"></div>
+        <div id="gameover-banner" class="gameover-banner" hidden>
+          <div class="gameover-banner-content">
+            <div id="gameover-headline" class="gameover-headline">黒の勝ち</div>
+            <div class="gameover-subline">タップで詳細スコアを表示</div>
+          </div>
+        </div>
       </div>
 
       <div id="message" class="message" aria-live="polite"></div>

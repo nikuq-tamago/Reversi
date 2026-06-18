@@ -941,7 +941,11 @@
     loadBestScores();
     updateBestScoresTable('best-scores-body');
     if (setupModalEl) {
-      try { setupModalEl.showModal(); } catch(e){}
+      try {
+        setupModalEl.showModal();
+      } catch (e) {
+        setupModalEl.setAttribute('open', '');
+      }
     }
   }
 
