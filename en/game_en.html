@@ -39,12 +39,6 @@
 <body>
 
   <div class="app">
-    <div id="gameover-banner" class="gameover-banner" hidden>
-      <div class="gameover-banner-content">
-        <div id="gameover-headline" class="gameover-headline">Black Wins!</div>
-        <div class="gameover-subline">Tap to view detailed score</div>
-      </div>
-    </div>
 
     <header class="header">
       <h1 class="title">STRIKE REVERSI</h1>
@@ -84,6 +78,12 @@
     <main id="game-area" class="game-area game-area--hidden">
       <div class="board-wrap">
         <div id="board" role="grid" aria-label="Reversi Board"></div>
+        <div id="gameover-banner" class="gameover-banner" hidden>
+          <div class="gameover-banner-content">
+            <div id="gameover-headline" class="gameover-headline">Black Wins!</div>
+            <div class="gameover-subline">Tap to view detailed score</div>
+          </div>
+        </div>
       </div>
 
       <div id="message" class="message" aria-live="polite"></div>
