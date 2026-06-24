@@ -2,7 +2,7 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 毎日0時
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Ping Supabase Edge Function
         run: |
-          curl -s "https://iclfzueezuwsfoxibmww.supabase.co/functions/v1/keepalive"
+          curl -s "https://iclfzueezuwsfoxibmww.supabase.co/functions/v1/smart-endpoint"
